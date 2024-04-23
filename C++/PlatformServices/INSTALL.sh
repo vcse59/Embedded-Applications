@@ -42,3 +42,8 @@ echo "Building client......"
 cd "$CMAKE_CLIENT"
 cmake -D EXECUTABLE_NAME="$CLIENT_APP_NAME" "../../$CMAKE_CLIENT_FILE"
 make
+
+# Copy the binaries to bin directory
+cd ../../
+cp "$SERVER_EXECUTABLE_PATH" "$BINARY_PATH"/
+cp "$CLIENT_EXECUTABLE_PATH" "$BINARY_PATH"/
