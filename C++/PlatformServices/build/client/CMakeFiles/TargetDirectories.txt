@@ -1,4 +1,0 @@
-/home/vivek/Projects/C++/PlatformServices/build/client/CMakeFiles/client.dir
-/home/vivek/Projects/C++/PlatformServices/build/client/CMakeFiles/jsoncpp.dir
-/home/vivek/Projects/C++/PlatformServices/build/client/CMakeFiles/edit_cache.dir
-/home/vivek/Projects/C++/PlatformServices/build/client/CMakeFiles/rebuild_cache.dir
