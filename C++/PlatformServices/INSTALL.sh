@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source CONFIG.sh
+
 # Remove the directory if it already exists
 if [ -d "$CMAKE_SERVER" ]; then
     echo "Directory 'CMAKE_SERVER' already exists..Removing it."
@@ -45,5 +46,15 @@ make
 
 # Copy the binaries to bin directory
 cd ../../
+
+# Remove the directory if it already exists
+if [ -d "$BINARY_PATH" ]; then
+    echo "Directory 'BINARY_PATH' already exists..Removing it."
+    rm -rf "$BINARY_PATH"
+fi
+
+# Create bin directory
+mkdir -p "$BINARY_PATH"
+
 cp "$SERVER_EXECUTABLE_PATH" "$BINARY_PATH"/
 cp "$CLIENT_EXECUTABLE_PATH" "$BINARY_PATH"/
