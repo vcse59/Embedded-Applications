@@ -48,10 +48,6 @@ namespace NetworkClass
             // get sockaddr, IPv4 or IPv6:
             void* get_in_addr(struct sockaddr *sa);
             void handle_connection(int client_socket);
-            JSON_SERVICE::JsonItem parseResponse(std::string httpBody);
-            std::string parseHttpResponse(const char* httpResponse);
-            std::string readIndexHtml(const std::string& filename);
-            std::string generateHttpResponse(const std::string& content);
     };
 }
 

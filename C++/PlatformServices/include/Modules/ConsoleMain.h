@@ -40,6 +40,9 @@ namespace FRAMEWORK
             // Returns SingleLinkedList class singleton instance
             Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> &getSingleLinkedList() override;
 
+            // Returns HttpParser class singleton instance
+            HTTP_SERVICE::S_PTR_HTTP_PARSER &getHTTPParser() override;
+
             // Returns S_PTR_CONSOLEAPPINTERFACE class singleton instance
             static S_PTR_CONSOLEAPPINTERFACE getConsoleAppInterface()
             {

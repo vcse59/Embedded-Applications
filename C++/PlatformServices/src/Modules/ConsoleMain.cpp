@@ -35,7 +35,7 @@ NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPClient()
 
 DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE ConsoleMain::getDataBaseTable()
 {
-    if (m_dbTableInterface == NULL)
+    if (m_dbTableInterface == nullptr)
     {
         m_dbTableInterface = std::make_shared<DataBaseTable>();
     }
@@ -44,7 +44,7 @@ DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE ConsoleMain::getDataBaseTable()
 
 Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode> &ConsoleMain::getQueue()
 {
-    if (m_queueInterface == NULL)
+    if (m_queueInterface == nullptr)
     {
         m_queueInterface = new QueueContainer<COMMON_DEFINITIONS::SingleLLNode>();
     }
@@ -53,17 +53,26 @@ Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode> &ConsoleMain::getQueue
 
 DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE ConsoleMain::getDBInstance()
 {
-    if (m_dbConnector == NULL)
+    if (m_dbConnector == nullptr)
     {
         m_dbConnector = std::make_shared<MySQLConnector>();
     }
     return m_dbConnector;
 }
-Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> &ConsoleMain::getSingleLinkedList()
+
+Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode>& ConsoleMain::getSingleLinkedList()
 {
-    if (m_linkedList == NULL)
+    if (m_linkedList == nullptr)
     {
         m_linkedList = new SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode>();
     }
     return *m_linkedList;
+}
+
+HTTP_SERVICE::S_PTR_HTTP_PARSER& ConsoleMain::getHTTPParser()
+{
+    if (m_HttpParser == nullptr){
+        m_HttpParser = std::shared_ptr<HTTP_SERVICE::HTTPParser>();
+    }
+    return m_HttpParser;
 }

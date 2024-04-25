@@ -17,6 +17,7 @@
 #include "Interfaces/NetworkClassInterface.h"
 #include "Modules/TCPService/TCPServer.h"
 #include "Modules/TCPService/TCPClient.h"
+#include "Modules/HTTPParser.h"
 #include "Containers/Queue.h"
 
 namespace FRAMEWORK
@@ -46,13 +47,17 @@ namespace FRAMEWORK
             // Returns SingleLinkedList class singleton instance
             virtual Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> &getSingleLinkedList() = 0;
 
+            // Returns HttpParser class singleton instance
+            virtual HTTP_SERVICE::S_PTR_HTTP_PARSER &getHTTPParser() = 0;
+
         protected:
 
-            NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE m_nwInterface = NULL;
-            DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE m_dbTableInterface = NULL;
-            Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>* m_queueInterface = NULL;
-            DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE m_dbConnector = NULL;
-            Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> *m_linkedList = NULL;
+            NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE m_nwInterface = nullptr;
+            DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE m_dbTableInterface = nullptr;
+            Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>* m_queueInterface = nullptr;
+            DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE m_dbConnector = nullptr;
+            Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> *m_linkedList = nullptr;
+            HTTP_SERVICE::S_PTR_HTTP_PARSER m_HttpParser = nullptr;
     };
     typedef std::shared_ptr<FRAMEWORK::ConsoleAppInterface> S_PTR_CONSOLEAPPINTERFACE;
 }
