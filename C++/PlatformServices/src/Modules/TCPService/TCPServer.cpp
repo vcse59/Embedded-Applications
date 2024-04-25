@@ -1,6 +1,8 @@
 #include "Modules/TCPService/TCPServer.h"
 #include <iostream>
 #include <thread>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 using namespace NetworkClass;
@@ -148,39 +150,63 @@ eSTATUS TCPServer::createServer()
 }
 
 void TCPServer::handle_connection(int client_socket) {
+
     char buffer[MAX_BUFFER_SIZE] = {0,};
-    int bytes_received = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
-    if (bytes_received <= 0) {
-        std::cerr << "Error in receiving request from client" << std::endl;
-        close(client_socket);
-        return;
+    std::string receivedData;
+    // Receive data
+    ssize_t bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
+    if (bytes_received < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            std::cerr << "Receive timeout" << std::endl;
+        } else {
+            std::cerr << "Receiving error" << std::endl;
+        }
+    } else if (bytes_received == 0) {
+        std::cerr << "Connection closed by peer" << std::endl;
+    } else {
+        // Process received data
+        receivedData += buffer;
+        memset(buffer, 0, MAX_BUFFER_SIZE);
     }
 
-    std::cout << "Received HTTP request:\n" << buffer << std::endl;
+    std::cout << "Received HTTP request:\n" << receivedData << std::endl;
 
-    std::string responseBody = parseHttpResponse(buffer);
+    std::string responseBody = parseHttpResponse(receivedData.c_str());
 
     if (responseBody.length() > 0){
         std::shared_ptr<std::string> jsonString = std::make_shared<std::string>(responseBody);
         std::shared_ptr<PARSER_INTERFACE::DataParserInterface> parser = std::make_shared<JSON_SERVICE::jsonParser>(jsonString);
         parser->deserialize();
         std::cout << parser->dumpData() << std::endl;
-    }else{
-        responseBody = "{\"None\" : \"None\"}";
     }
 
-    // Construct HTTP response with JSON data
-    char http_response[MAX_BUFFER_SIZE] = {'\0',};
-    snprintf(http_response, MAX_BUFFER_SIZE,
-             "HTTP/1.1 200 OK\r\n"
-             "Content-Type: application/json\r\n"
-             "Content-Length: %zu\r\n"
-             "Connection: close\r\n"
-             "\r\n"
-             "%s",
-             strlen(responseBody.c_str()), responseBody.c_str());
-    if (send(client_socket, http_response, sizeof(http_response), 0) < 0) {
-        std::cerr << "Error in sending response to client" << std::endl;
+    // Read index.html content
+    std::string index_html_content = readIndexHtml("webFiles/index.html");
+
+    // Generate HTTP response
+    std::string http_response = generateHttpResponse(index_html_content);
+    http_response[http_response.length()] = '\0';
+
+    std::cout << "Sending response : " << http_response << std::endl;
+
+    // Send HTTP response
+    const char* data = http_response.c_str();
+    size_t remaining = http_response.size();
+    while (remaining > 0) {
+        ssize_t sent = send(client_socket, data, remaining, 0);
+        if (sent == -1) {
+            // Handle send error
+            std::cerr << "Error sending data\n";
+            break;
+        } else if (sent == 0) {
+            // Connection closed by peer
+            std::cerr << "Connection closed by peer\n";
+            break;
+        } else {
+            // Advance buffer pointer and update remaining data size
+            data += sent;
+            remaining -= sent;
+        }
     }
 
     close(client_socket);
@@ -231,4 +257,29 @@ void* TCPServer::get_in_addr(struct sockaddr *sa){
 JSON_SERVICE::JsonItem TCPServer::parseResponse(std::string httpBody)
 {
     return JSON_SERVICE::JsonItem();
+}
+
+std::string TCPServer::readIndexHtml(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return "";
+    }
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+
+    // Output the contents of the file
+    std::cout << "Contents of index.html:\n" << buffer.str() << std::endl;
+
+    return buffer.str();
+}
+
+std::string TCPServer::generateHttpResponse(const std::string& content) {
+    std::cout << "CONTENT LENGTH***************" << content.length() << std::endl;
+    std::stringstream response;
+    response << "HTTP/1.1 200 OK\r\n";
+    response << "Content-Type: text/html\r\n";
+    response << "Content-Length: " << content.size() << "\r\n\r\n";
+    response << content;
+    return response.str();
 }

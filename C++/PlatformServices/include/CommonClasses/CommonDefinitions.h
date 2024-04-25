@@ -20,8 +20,8 @@
 
 // Pre-Processor Directive
 #define MAX_CONNECTIONS 64 
-#define MAX_BUFFER_SIZE 1025
-#define PORT 8888 
+#define MAX_BUFFER_SIZE 1024
+#define PORT 9999 
 #define MAX_HEADER_SIZE 2048
 #define MAX_BODY_SIZE   8192
 
