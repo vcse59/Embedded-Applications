@@ -2,6 +2,12 @@
 
 source CONFIG.sh
 
+buildType="Debug";
+
+if [ -n "$1" ]; then
+    buildType=$1
+fi
+
 # Remove the directory if it already exists
 if [ -d "$CMAKE_SERVER" ]; then
     echo "Directory 'CMAKE_SERVER' already exists..Removing it."
@@ -32,16 +38,24 @@ if [ $? -eq 0 ]; then
 fi
 
 # Change to server directory and run cmake command
-echo "Building server......"
+echo "Building $buildType server......"
 cd "$CMAKE_SERVER"
-cmake -D EXECUTABLE_NAME="$SERVER_APP_NAME" "../../$CMAKE_SERVER_FILE"
+if [ "$buildType" = "Debug" ]; then
+    cmake -DCMAKE_BUILD_TYPE=Debug -D EXECUTABLE_NAME="$SERVER_APP_NAME" "../../$CMAKE_SERVER_FILE"
+else
+    cmake -DCMAKE_BUILD_TYPE=Release -D EXECUTABLE_NAME="$SERVER_APP_NAME" "../../$CMAKE_SERVER_FILE"
+fi
 make
 
 # Change to client directory and run cmake command
 cd ../../
-echo "Building client......"
+echo "Building $buildType client......"
 cd "$CMAKE_CLIENT"
-cmake -D EXECUTABLE_NAME="$CLIENT_APP_NAME" "../../$CMAKE_CLIENT_FILE"
+if [ "$buildType" = "Debug" ]; then
+    cmake -DCMAKE_BUILD_TYPE=Debug -D EXECUTABLE_NAME="$CLIENT_APP_NAME" "../../$CMAKE_CLIENT_FILE"
+else
+    cmake -DCMAKE_BUILD_TYPE=Release -D EXECUTABLE_NAME="$CLIENT_APP_NAME" "../../$CMAKE_CLIENT_FILE"
+fi
 make
 
 # Copy the binaries to bin directory
