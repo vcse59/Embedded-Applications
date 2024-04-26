@@ -170,8 +170,8 @@ void TCPServer::handle_connection(int client_socket) {
     }
     std::cout << "HEADER END" << std::endl;
 
-    COMMON_DEFINITIONS::eHTTP_SESSION_STATUS sessionStatus = consoleApp->getHTTPSessionManager()->addSession(sessionId);
     COMMON_DEFINITIONS::eHTTP_SESSION_STATUS httpStatus = consoleApp->getHTTPSessionManager()->isValidSession(sessionId);
+    COMMON_DEFINITIONS::eHTTP_SESSION_STATUS sessionStatus = consoleApp->getHTTPSessionManager()->addSession(sessionId);
     std::cout << "SESSION STATUS : " << httpStatus << std::endl;
 
     if (responseBody.length() > 0){

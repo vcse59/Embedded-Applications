@@ -5,9 +5,9 @@
 #include <unordered_map>
 
 #include "CommonClasses/CommonDefinitions.h"
-#include "Modules/HTTPSession.h"
+#include "Modules/HTTPService/HTTPSession.h"
 #include "Modules/Logger/Logger.h"
-#include "Modules/HTTPUtility.h"
+#include "Modules/HTTPService/HTTPUtility.h"
 
 namespace HTTP_SERVICE
 {

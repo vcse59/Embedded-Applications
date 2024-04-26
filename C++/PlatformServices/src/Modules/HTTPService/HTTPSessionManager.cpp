@@ -1,4 +1,4 @@
-#include "Modules/HTTPSessionManager.h"
+#include "Modules/HTTPService/HTTPSessionManager.h"
 #include "Modules/Logger/Logger.h"
 
 using namespace HTTP_SERVICE;

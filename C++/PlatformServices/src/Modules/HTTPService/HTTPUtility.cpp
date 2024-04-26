@@ -6,7 +6,7 @@
 #include <openssl/sha.h>
 #include <unordered_map>
 
-#include "Modules/HTTPUtility.h"
+#include "Modules/HTTPService/HTTPUtility.h"
 
 using namespace HTTP_SERVICE;
 

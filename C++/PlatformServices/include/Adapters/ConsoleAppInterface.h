@@ -17,9 +17,9 @@
 #include "Interfaces/NetworkClassInterface.h"
 #include "Modules/TCPService/TCPServer.h"
 #include "Modules/TCPService/TCPClient.h"
-#include "Modules/HTTPUtility.h"
+#include "Modules/HTTPService/HTTPUtility.h"
 #include "Containers/Queue.h"
-#include "Modules/HTTPSessionManager.h"
+#include "Modules/HTTPService/HTTPSessionManager.h"
 #include "Modules/Logger/Logger.h"
 
 namespace FRAMEWORK
