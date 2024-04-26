@@ -48,6 +48,16 @@ namespace COMMON_DEFINITIONS
         DATA_MANIPULATION   = 2,
         DATA_DEFINITION     = 3
     };
+    
+    enum eHTTP_SESSION_STATUS
+    {
+        UNKNOWN_SESSION     = 0,
+        SESSION_ADDED       = 1,
+        SESSION_DUPLICATE   = 2,
+        SESSION_EXPIRED     = 3,
+        SESSION_DELETED     = 4,
+        SESSION_VALID       = 5
+    };
 
     // Class to keep generic data
     class SingleLLNode

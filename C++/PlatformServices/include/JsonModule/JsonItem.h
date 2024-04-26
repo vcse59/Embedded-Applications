@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <json/json.h>
+#include "Modules/Logger/Logger.h"
 
 namespace JSON_SERVICE{
     class JsonItem;
@@ -12,7 +13,7 @@ namespace JSON_SERVICE{
     class JsonItem
     {
         public:
-            JsonItem();
+            JsonItem(LOGGER_SERVICE::S_PTR_LOGGER logger);
             ~JsonItem();
 
             SJsonItem add(std::string fieldName, int fieldValue);  
@@ -26,6 +27,7 @@ namespace JSON_SERVICE{
             void dump();
         private:
             std::shared_ptr<Json::Value> SJsonRoot;
+            LOGGER_SERVICE::S_PTR_LOGGER m_logger;
     };
 
 

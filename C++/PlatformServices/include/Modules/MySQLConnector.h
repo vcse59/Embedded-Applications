@@ -20,13 +20,14 @@
 
 #include "CommonClasses/CommonDefinitions.h"
 #include "Interfaces/DataBaseConnectorInterface.h"
+#include "Modules/Logger/Logger.h"
 
 namespace DATABASE_SERVICE
 {
     class MySQLConnector : public DATABASE_SERVICE::DataBaseConnectorInterface
     {
         public:
-            MySQLConnector();
+            MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger);
             ~MySQLConnector();
 
             COMMON_DEFINITIONS::eSTATUS connectToDBService() override;
@@ -57,6 +58,7 @@ namespace DATABASE_SERVICE
             sql::Connection *m_DBconnection = NULL;
             sql::PreparedStatement *m_PrepStatement = NULL;
             std::string m_DbName;
+            LOGGER_SERVICE::S_PTR_LOGGER m_logger;
     };
 }
 

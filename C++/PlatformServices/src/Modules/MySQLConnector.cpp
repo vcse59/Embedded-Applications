@@ -5,7 +5,7 @@
 using namespace DATABASE_SERVICE;
 using namespace std;
 
-MySQLConnector::MySQLConnector()
+MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger)
 {
 
 }

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "CommonClasses/CommonDefinitions.h"
+#include "Adapters/ConsoleAppInterface.h"
 
 using namespace COMMON_DEFINITIONS;
 using namespace std;
@@ -13,6 +14,7 @@ namespace Storage
     class SingleLinkedList{
 
         public:
+            SingleLinkedList(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger){}
             SingleLinkedList();
             ~SingleLinkedList();
 
@@ -34,6 +36,7 @@ namespace Storage
             void printLinkedList();
         private:
             T *mHeadNode = NULL;
+            LOGGER_SERVICE::S_PTR_LOGGER m_logger = nullptr;
     };
 }
 

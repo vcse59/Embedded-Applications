@@ -3,7 +3,7 @@
 
 using namespace JSON_SERVICE;
 
-JsonItem::JsonItem()
+JsonItem::JsonItem(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger)
 {
     SJsonRoot = std::make_shared<Json::Value>();
 }

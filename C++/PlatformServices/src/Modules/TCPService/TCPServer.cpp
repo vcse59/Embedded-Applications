@@ -2,6 +2,10 @@
 #include <thread>
 #include <fstream>
 #include <sstream>
+#include <chrono>
+#include <random>
+#include <iomanip>
+#include <openssl/sha.h>
 
 #include "Modules/TCPService/TCPServer.h"
 #include "Modules/ConsoleMain.h"
@@ -10,8 +14,9 @@ using namespace std;
 using namespace NetworkClass;
 using namespace COMMON_DEFINITIONS;
 
-TCPServer::TCPServer(unsigned int portNumber)
+TCPServer::TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumber)
 {
+    m_logger        =   logger;
     mPortNumber     =   portNumber;
 }
 
@@ -129,6 +134,9 @@ void TCPServer::handle_connection(int client_socket) {
 
     char buffer[MAX_BUFFER_SIZE] = {0,};
     std::string receivedData;
+
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+
     // Receive data
     ssize_t bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
     if (bytes_received < 0) {
@@ -147,25 +155,37 @@ void TCPServer::handle_connection(int client_socket) {
 
     std::cout << "Received HTTP request:\n" << receivedData << std::endl;
 
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    HTTP_SERVICE::S_PTR_HTTP_PARSER httpParser = consoleApp->getHTTPParser();
+    HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
-    std::string responseBody = httpParser->parseHttpResponse(receivedData.c_str());
+    std::string responseBody = httpUtility->parseHttpResponse(receivedData.c_str());
+    std::string sessionId;
+    std::unordered_map<std::string, std::string> headerMap = httpUtility->parseHttpHeaders(receivedData, sessionId);
+
+    std::unordered_map<std::string, std::string>::iterator it = headerMap.begin();
+    std::cout << "HEADER START" << std::endl;
+    std::cout << "Session ID : " << sessionId << std::endl;
+    while(it != headerMap.end()){
+        std::cout << it->first << " " << it->second << std::endl;
+        it++;
+    }
+    std::cout << "HEADER END" << std::endl;
+
+    COMMON_DEFINITIONS::eHTTP_SESSION_STATUS sessionStatus = consoleApp->getHTTPSessionManager()->addSession(sessionId);
+    COMMON_DEFINITIONS::eHTTP_SESSION_STATUS httpStatus = consoleApp->getHTTPSessionManager()->isValidSession(sessionId);
+    std::cout << "SESSION STATUS : " << httpStatus << std::endl;
 
     if (responseBody.length() > 0){
         std::shared_ptr<std::string> jsonString = std::make_shared<std::string>(responseBody);
-        std::shared_ptr<PARSER_INTERFACE::DataParserInterface> parser = std::make_shared<JSON_SERVICE::jsonParser>(jsonString);
+        std::shared_ptr<PARSER_INTERFACE::DataParserInterface> parser = std::make_shared<JSON_SERVICE::jsonParser>(m_logger, jsonString);
         parser->deserialize();
         std::cout << parser->dumpData() << std::endl;
     }
 
     // Read index.html content
-    std::string index_html_content = httpParser->readIndexHtml("webFiles/index.html");
+    std::string index_html_content = httpUtility->readIndexHtml("webFiles/index.html");
 
     // Generate HTTP response
-    std::string http_response = httpParser->generateHttpResponse(index_html_content);
-    http_response[http_response.length()] = '\0';
-
+    std::string http_response = httpUtility->generateHttpResponse(index_html_content, sessionId);
     std::cout << "Sending response : " << http_response << std::endl;
 
     // Send HTTP response

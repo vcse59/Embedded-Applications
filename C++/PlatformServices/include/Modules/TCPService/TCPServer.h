@@ -28,7 +28,7 @@ namespace NetworkClass
     {
         public:
 
-            TCPServer(unsigned int portNumber);
+            TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumber);
             ~TCPServer();
 
             COMMON_DEFINITIONS::eSTATUS createServer() override;
@@ -39,7 +39,8 @@ namespace NetworkClass
             int getConnectionId() const override;
 
         protected:
-            bool isServerClosed = {true}; 
+            bool isServerClosed = {true};
+            LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             int mServerSocket = {-1};
             int mClientSockets[MAX_CONNECTIONS] = {-1,};
             COMMON_DEFINITIONS::eSTATUS mStatus = COMMON_DEFINITIONS::eSTATUS::UNKNOWN;

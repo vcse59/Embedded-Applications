@@ -1,14 +1,16 @@
 #ifndef __JSON_PARSER_H__
 #define __JSON_PARSER_H__
 
-#include "Interfaces/DataParserInteface.h"
 #include <json/json.h>
+
+#include "Interfaces/DataParserInteface.h"
+#include "Modules/Logger/Logger.h"
 
 namespace JSON_SERVICE{
     class jsonParser : public PARSER_INTERFACE::DataParserInterface
     {
         public:
-            jsonParser(std::shared_ptr<std::string> data);
+            jsonParser(LOGGER_SERVICE::S_PTR_LOGGER logger, std::shared_ptr<std::string> data);
             ~jsonParser();
 
             void serialize() override;
@@ -32,6 +34,7 @@ namespace JSON_SERVICE{
 
             std::shared_ptr<Json::Value> m_SParsedRoot = nullptr;
             std::shared_ptr<std::string> m_Data;
+            LOGGER_SERVICE::S_PTR_LOGGER m_logger;
     };
 }
 

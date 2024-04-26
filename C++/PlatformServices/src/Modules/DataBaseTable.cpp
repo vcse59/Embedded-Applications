@@ -3,7 +3,7 @@
 
 using namespace DATABASE_SERVICE;
 
-DataBaseTable::DataBaseTable()
+DataBaseTable::DataBaseTable(LOGGER_SERVICE::S_PTR_LOGGER logger) : m_logger{logger}
 {
 
 }

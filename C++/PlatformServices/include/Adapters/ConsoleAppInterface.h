@@ -17,8 +17,10 @@
 #include "Interfaces/NetworkClassInterface.h"
 #include "Modules/TCPService/TCPServer.h"
 #include "Modules/TCPService/TCPClient.h"
-#include "Modules/HTTPParser.h"
+#include "Modules/HTTPUtility.h"
 #include "Containers/Queue.h"
+#include "Modules/HTTPSessionManager.h"
+#include "Modules/Logger/Logger.h"
 
 namespace FRAMEWORK
 {
@@ -48,7 +50,13 @@ namespace FRAMEWORK
             virtual Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> &getSingleLinkedList() = 0;
 
             // Returns HttpParser class singleton instance
-            virtual HTTP_SERVICE::S_PTR_HTTP_PARSER &getHTTPParser() = 0;
+            virtual HTTP_SERVICE::S_PTR_HTTP_UTILITY &getHTTPUtility() = 0;
+
+            // Returns HttpSessionManager class singleton instance
+            virtual HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER &getHTTPSessionManager() = 0;
+
+            // Returns Logger class singleton instance
+            virtual LOGGER_SERVICE::S_PTR_LOGGER &getLogger() = 0;
 
         protected:
 
@@ -57,7 +65,9 @@ namespace FRAMEWORK
             Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>* m_queueInterface = nullptr;
             DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE m_dbConnector = nullptr;
             Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> *m_linkedList = nullptr;
-            HTTP_SERVICE::S_PTR_HTTP_PARSER m_HttpParser = nullptr;
+            HTTP_SERVICE::S_PTR_HTTP_UTILITY m_HttpUtility = nullptr;
+            HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER m_HttpSesssionManager = nullptr;
+            LOGGER_SERVICE::S_PTR_LOGGER m_Logger = nullptr;
     };
     typedef std::shared_ptr<FRAMEWORK::ConsoleAppInterface> S_PTR_CONSOLEAPPINTERFACE;
 }

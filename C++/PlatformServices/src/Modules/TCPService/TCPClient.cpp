@@ -1,15 +1,20 @@
 #include <sstream>
 
+#include "Modules/ConsoleMain.h"
 #include "Modules/TCPService/TCPClient.h"
 #include "JsonModule/JSONParser.h"
 #include "JsonModule/JsonItem.h"
 
 using namespace NetworkClass;
 
-TCPClient::TCPClient(std::string serverAddress, unsigned int portNumber)
+TCPClient::TCPClient(LOGGER_SERVICE::S_PTR_LOGGER logger, std::string serverAddress, unsigned int portNumber)
 {
+    m_logger            =   logger;
     m_ServerIPAddress   =   serverAddress;
     mPortNumber         =   portNumber;
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
+    m_SessionId = httpUtility->generateSessionID();
 
     // Create a socket
     if ((m_Socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -91,23 +96,51 @@ void TCPClient::exchangeMessages()
              "POST /api HTTP/1.1\r\n"
              "Host: %s\r\n"
              "Content-Type: application/json\r\n"
+             "Set-Cookie: sessionID=%s; HttpOnly; Secure\r\n" // Embed session ID in cookie
              "Content-Length: %zu\r\n"
              "Connection: close\r\n"
              "\r\n"
              "%s",
-             "127.0.0.1", strlen(json_data), json_data);
-    ssize_t sent = send(m_Socketfd, http_request, sizeof(http_request), 0);
-    if (sent == -1) {
-        std::cerr << "Error sending request" << std::endl;
-        return;
+             "127.0.0.1", m_SessionId.c_str(), strlen(json_data), json_data);
+
+    http_request[strlen(http_request)] = '\0';
+    // Send HTTP response
+    const char* data = http_request;
+    size_t remaining = strlen(http_request);
+    while (remaining > 0) {
+        ssize_t sent = send(m_Socketfd, data, remaining, 0);
+        if (sent == -1) {
+            // Handle send error
+            std::cerr << "Error sending data\n";
+            break;
+        } else if (sent == 0) {
+            // Connection closed by peer
+            std::cerr << "Connection closed by peer\n";
+            break;
+        } else {
+            // Advance buffer pointer and update remaining data size
+            data += sent;
+            remaining -= sent;
+        }
     }
 
     // Receive HTTP response
-    char buffer[MAX_BUFFER_SIZE];
-    std::stringstream response_stream;
-    ssize_t bytes_received;
-    while ((bytes_received = recv(m_Socketfd, buffer, MAX_BUFFER_SIZE, 0)) > 0) {
-        response_stream.write(buffer, bytes_received);
+    char buffer[MAX_BUFFER_SIZE] = {0,};
+    std::string receivedData;
+    // Receive data
+    ssize_t bytes_received = recv(m_Socketfd, buffer, sizeof(buffer), 0);
+    if (bytes_received < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            std::cerr << "Receive timeout" << std::endl;
+        } else {
+            std::cerr << "Receiving error" << std::endl;
+        }
+    } else if (bytes_received == 0) {
+        std::cerr << "Connection closed by peer" << std::endl;
+    } else {
+        // Process received data
+        receivedData += buffer;
+        memset(buffer, 0, MAX_BUFFER_SIZE);
     }
 
     if (bytes_received == -1) {
@@ -115,7 +148,7 @@ void TCPClient::exchangeMessages()
         return;
     }
 
-    std::string response = response_stream.str();
+    std::string response = receivedData;
     std::cout << std::endl << "Response:\n" << response << std::endl;
     close(m_Socketfd);
 }
