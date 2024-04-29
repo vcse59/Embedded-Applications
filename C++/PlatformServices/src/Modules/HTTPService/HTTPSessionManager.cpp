@@ -12,9 +12,15 @@ HttpSessionManager::~HttpSessionManager(){}
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::addSession(std::string sessionId){
 
+    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Entering HttpSessionManager::addSession" << std::endl;
+    COMMON_DEFINITIONS::eHTTP_SESSION_STATUS retVal = COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_EXISTS;
     if (m_SessionInfo.find(sessionId) == m_SessionInfo.end())
+    {
         m_SessionInfo.insert(std::pair<std::string, S_PTR_HTTP_SESSION>(sessionId, std::make_shared<HttpSession>(m_logger, sessionId)));
-    return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_ADDED;
+        retVal = COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_ADDED;
+    }
+    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Exiting HttpSessionManager::addSession" << std::endl;
+    return retVal;
 }
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::removeSession(std::string sessionId){
@@ -25,12 +31,9 @@ COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::removeSession(std::
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::isValidSession(std::string sessionId){
     std::cout << "SESSION : " << sessionId << std::endl;
-    if (m_SessionInfo.empty() == true || m_SessionInfo.find(sessionId) == m_SessionInfo.end()){
-        std::cout << "DEBUG 2" << std::endl;
+    if (m_SessionInfo.find(sessionId) == m_SessionInfo.end()){
         return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_EXPIRED;
     }
-    std::cout << "DEBUG 3" << std::endl;
-
     return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_VALID;
 }
 

@@ -22,13 +22,13 @@ std::string HTTPUtility::parseHttpResponse(const char* httpResponse){
     }
 
     // Print headers
-    printf("HTTP Headers:\n");
+    /*printf("HTTP Headers:\n");
     fwrite(httpResponse, 1, headers_end - httpResponse, stdout);
-    printf("\n");
+    printf("\n");*/
 
     // Print body, if any
     if (*(headers_end + 4) != '\0') {
-        printf("HTTP Body:\n%s\n", headers_end + 4);
+        //printf("HTTP Body:\n%s\n", headers_end + 4);
         strcpy(responseBody, headers_end + 4);
     } else {
         printf("No HTTP Body\n");
@@ -47,13 +47,13 @@ std::string HTTPUtility::readIndexHtml(const std::string& filename) {
     buffer << file.rdbuf();
 
     // Output the contents of the file
-    std::cout << "Contents of index.html:\n" << buffer.str() << std::endl;
+    //std::cout << "Contents of index.html:\n" << buffer.str() << std::endl;
 
     return buffer.str();
 }
 
 std::string HTTPUtility::generateHttpResponse(const std::string& content, const std::string& sessionId) {
-    std::cout << "CONTENT LENGTH***************" << sessionId << std::endl;
+    //std::cout << "CONTENT LENGTH***************" << sessionId << std::endl;
     std::stringstream response;
     response << "HTTP/1.1 200 OK\r\n";
     response << "Content-Type: text/html\r\n";
@@ -61,7 +61,7 @@ std::string HTTPUtility::generateHttpResponse(const std::string& content, const 
     response << "Content-Length: " << content.size() << "\r\n\r\n";
     response << content;
 
-    std::cout << "RESPONSE : " << response.str() << std::endl;
+    //std::cout << "RESPONSE : " << response.str() << std::endl;
     return response.str();
 }
 

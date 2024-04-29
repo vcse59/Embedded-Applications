@@ -53,7 +53,7 @@ namespace COMMON_DEFINITIONS
     {
         UNKNOWN_SESSION     = 0,
         SESSION_ADDED       = 1,
-        SESSION_DUPLICATE   = 2,
+        SESSION_EXISTS      = 2,
         SESSION_EXPIRED     = 3,
         SESSION_DELETED     = 4,
         SESSION_VALID       = 5

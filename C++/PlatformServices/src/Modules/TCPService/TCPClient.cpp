@@ -14,7 +14,7 @@ TCPClient::TCPClient(LOGGER_SERVICE::S_PTR_LOGGER logger, std::string serverAddr
     mPortNumber         =   portNumber;
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
-    m_SessionId = httpUtility->generateSessionID();
+    m_SessionId = "5344de763fe60e4a4477d0a043efa3ba";
 
     // Create a socket
     if ((m_Socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
