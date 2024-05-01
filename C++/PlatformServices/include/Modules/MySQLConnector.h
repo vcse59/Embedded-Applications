@@ -37,15 +37,6 @@ namespace DATABASE_SERVICE
                                                     std::string queryString,
                                                     COMMON_DEFINITIONS::eQUERY_TYPE qyeryType) override;
 
-            // COMMON_DEFINITIONS::eSTATUS dropTable(std::string tableName);
-
-            //COMMON_DEFINITIONS::eSTATUS switchDatabase(std::string dbName);
-
-            //COMMON_DEFINITIONS::eSTATUS insertRecord();
-            //COMMON_DEFINITIONS::eSTATUS DeleteRecord();
-            //COMMON_DEFINITIONS::eSTATUS UpdateRecord();
-            // TODO - Fetch record
-
         private:
 
             COMMON_DEFINITIONS::eSTATUS processDDLQuery(std::string queryString);
@@ -59,6 +50,11 @@ namespace DATABASE_SERVICE
             sql::PreparedStatement *m_PrepStatement = NULL;
             std::string m_DbName;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
+
+            MySQLConnector(const MySQLConnector&) = delete;
+            MySQLConnector& operator=(const MySQLConnector&) = delete;
+            MySQLConnector(const MySQLConnector&&) = delete;
+            MySQLConnector& operator=(const MySQLConnector&&) = delete;
     };
 }
 

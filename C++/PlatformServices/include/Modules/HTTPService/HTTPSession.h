@@ -21,6 +21,10 @@ namespace HTTP_SERVICE
 
             std::string m_SessionId;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
+            HttpSession(const HttpSession&) = delete;
+            HttpSession& operator=(const HttpSession&) = delete;
+            HttpSession(const HttpSession&&) = delete;
+            HttpSession& operator=(const HttpSession&&) = delete;
     };
 
     typedef std::shared_ptr<HTTP_SERVICE::HttpSession> S_PTR_HTTP_SESSION;

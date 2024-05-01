@@ -37,6 +37,10 @@ namespace Storage
         private:
             T *mHeadNode = NULL;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger = nullptr;
+            SingleLinkedList(const SingleLinkedList&) = delete;
+            SingleLinkedList& operator=(const SingleLinkedList&) = delete;
+            SingleLinkedList(const SingleLinkedList&&) = delete;
+            SingleLinkedList& operator=(const SingleLinkedList&&) = delete;
     };
 }
 

@@ -16,6 +16,10 @@ namespace DATABASE_SERVICE
             COMMON_DEFINITIONS::eSTATUS setup() override;
         private:
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
+            DataBaseTable(const DataBaseTable&) = delete;
+            DataBaseTable& operator=(const DataBaseTable&) = delete;
+            DataBaseTable(const DataBaseTable&&) = delete;
+            DataBaseTable& operator=(const DataBaseTable&&) = delete;
     };
 }
 

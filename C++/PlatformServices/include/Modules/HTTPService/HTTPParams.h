@@ -30,7 +30,11 @@ namespace HTTP_SERVICE
             HTTP_SERVICE::eHTTP_METHODS m_Method = HTTP_SERVICE::eHTTP_METHODS::HTTP_UNKNOWN;
             HTTP_SERVICE::eCONTENT_TYPE m_ContentType = HTTP_SERVICE::eCONTENT_TYPE::APPLICATION_UNKNOWN;
             std::string m_SessonID;
-            std::string m_HostIP;            
+            std::string m_HostIP;
+            HttpParams(const HttpParams&) = delete;
+            HttpParams& operator=(const HttpParams&) = delete;
+            HttpParams(const HttpParams&&) = delete;
+            HttpParams& operator=(const HttpParams&&) = delete;
     };
 }
 

@@ -28,6 +28,8 @@ namespace FRAMEWORK
     {
         public:
 
+            ConsoleAppInterface(){}
+
             // Destructor
             virtual ~ConsoleAppInterface(){}
 
@@ -68,6 +70,12 @@ namespace FRAMEWORK
             HTTP_SERVICE::S_PTR_HTTP_UTILITY m_HttpUtility = nullptr;
             HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER m_HttpSesssionManager = nullptr;
             LOGGER_SERVICE::S_PTR_LOGGER m_Logger = nullptr;
+
+        private:
+            ConsoleAppInterface(const ConsoleAppInterface&) = delete;
+            ConsoleAppInterface& operator=(const ConsoleAppInterface&) = delete;
+            ConsoleAppInterface(const ConsoleAppInterface&&) = delete;
+            ConsoleAppInterface& operator=(const ConsoleAppInterface&&) = delete;
     };
     typedef std::shared_ptr<FRAMEWORK::ConsoleAppInterface> S_PTR_CONSOLEAPPINTERFACE;
 }

@@ -35,6 +35,12 @@ namespace LOGGER_SERVICE
             LOGGER_SERVICE::LogLevel	mLogLevel;
             std::mutex                          lMutex;
             LOGGER_SERVICE::eLOG_LEVEL_ENUM  mAppLogLevel;
+
+        private:
+            Logger(const Logger&) = delete;
+            Logger& operator=(const Logger&) = delete;
+            Logger(const Logger&&) = delete;
+            Logger& operator=(const Logger&&) = delete;
     };
 
     typedef std::shared_ptr<LOGGER_SERVICE::Logger> S_PTR_LOGGER;

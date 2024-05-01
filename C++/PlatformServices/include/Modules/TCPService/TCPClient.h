@@ -44,6 +44,10 @@ namespace NetworkClass
             bool m_CloseConnection = {false}; 
             COMMON_DEFINITIONS::eSTATUS m_SocketStatus = COMMON_DEFINITIONS::eSTATUS::SOCKET_INITIALIZATION_FAILED;
             void exchangeMessages();
+            TCPClient(const TCPClient&) = delete;
+            TCPClient& operator=(const TCPClient&) = delete;
+            TCPClient(const TCPClient&&) = delete;
+            TCPClient& operator=(const TCPClient&&) = delete;
     };
 }
 

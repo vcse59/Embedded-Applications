@@ -22,6 +22,10 @@ namespace HTTP_SERVICE
 
         private:
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
+            HTTPUtility(const HTTPUtility&) = delete;
+            HTTPUtility& operator=(const HTTPUtility&) = delete;
+            HTTPUtility(const HTTPUtility&&) = delete;
+            HTTPUtility& operator=(const HTTPUtility&&) = delete;
     };
 
     typedef std::shared_ptr<HTTP_SERVICE::HTTPUtility> S_PTR_HTTP_UTILITY;

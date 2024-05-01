@@ -23,7 +23,7 @@ TCPServer::TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumbe
 
 TCPServer::~TCPServer()
 {
-    cout << "Close the TCP Socket" << endl;
+    cout << "Close the web server" << endl;
     for (unsigned int i = 0; i < MAX_CONNECTIONS; i++)
     {
         if (mClientSockets[i] >= 0)
@@ -119,7 +119,10 @@ eSTATUS TCPServer::createServer()
                 continue;
             }
 
-            printf("New client connected : %d\n", client_socket);
+	    char ipString[INET6_ADDRSTRLEN]; // Maximum length for IPv6 address string
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)(&client_addr);
+            inet_ntop(AF_INET, &(ipv4->sin_addr), ipString, INET_ADDRSTRLEN);
+            printf("New client connected : %d from %s\n", client_socket, ipString);
 
             // Handle client request here
             // Spawn a new thread to handle the connection
@@ -236,7 +239,7 @@ eSTATUS TCPServer::receiveMessage(const char* messageBuffer)
 
 eSTATUS TCPServer::closeSocket()
 {
-    cout << "Shutting down the server" << endl;
+    cout << "Shutting down the web server" << endl;
     isServerClosed = true;
     return eSTATUS::SUCCESS;
 }

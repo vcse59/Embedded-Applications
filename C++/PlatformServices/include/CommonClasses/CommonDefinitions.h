@@ -146,6 +146,8 @@ namespace COMMON_DEFINITIONS
             unsigned int mDataLength = {0};
             unsigned long mKey = {0};
             COMMON_DEFINITIONS::SingleLLNode* mNext = NULL;
+            SingleLLNode(const SingleLLNode&&) = delete;
+            SingleLLNode& operator=(const SingleLLNode&&) = delete;
     };
 }
 #endif

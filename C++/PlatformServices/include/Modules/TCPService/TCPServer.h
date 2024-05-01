@@ -49,6 +49,12 @@ namespace NetworkClass
             // get sockaddr, IPv4 or IPv6:
             void* get_in_addr(struct sockaddr *sa);
             void handle_connection(int client_socket);
+
+        private:
+            TCPServer(const TCPServer&) = delete;
+            TCPServer& operator=(const TCPServer&) = delete;
+            TCPServer(const TCPServer&&) = delete;
+            TCPServer& operator=(const TCPServer&&) = delete;
     };
 }
 

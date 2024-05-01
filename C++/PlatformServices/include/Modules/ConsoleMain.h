@@ -19,6 +19,9 @@ namespace FRAMEWORK
     class ConsoleMain : public ConsoleAppInterface
     {
         public:
+            // Constructor
+            ConsoleMain(){}
+
             // Destructor
             ~ConsoleMain();
 
@@ -60,6 +63,12 @@ namespace FRAMEWORK
                 return m_Interface;
             }
             static S_PTR_CONSOLEAPPINTERFACE m_Interface;
+        
+        private:
+            ConsoleMain(const ConsoleMain&) = delete;
+            ConsoleMain& operator=(const ConsoleMain&) = delete;
+            ConsoleMain(const ConsoleMain&&) = delete;
+            ConsoleMain& operator=(const ConsoleMain&&) = delete;
     };
 
     typedef std::shared_ptr<FRAMEWORK::ConsoleMain> S_PTR_CONSOLEMAIN;

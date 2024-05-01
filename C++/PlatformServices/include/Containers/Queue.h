@@ -22,6 +22,10 @@ namespace Storage
         private:
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             Storage::SingleLinkedList<T> mContainer;
+            QueueContainer(const QueueContainer&) = delete;
+            QueueContainer& operator=(const QueueContainer&) = delete;
+            QueueContainer(const QueueContainer&&) = delete;
+            QueueContainer& operator=(const QueueContainer&&) = delete;
     };
 }
 

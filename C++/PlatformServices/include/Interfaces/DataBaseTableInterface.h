@@ -24,6 +24,12 @@ namespace DATABASE_SERVICE
             std::string mDBName = {};
             std::string mTableName = {};
             std::map<std::string, std::string> mDbTableFieldDetails;
+        
+        private:
+            DataBaseTableInterface(const DataBaseTableInterface&) = delete;
+            DataBaseTableInterface& operator=(const DataBaseTableInterface&) = delete;
+            DataBaseTableInterface(const DataBaseTableInterface&&) = delete;
+            DataBaseTableInterface& operator=(const DataBaseTableInterface&&) = delete;
     };
     typedef std::shared_ptr<DATABASE_SERVICE::DataBaseTableInterface> S_PTR_DATABASE_TABLE_INTERFACE;
 }

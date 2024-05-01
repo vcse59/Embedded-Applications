@@ -28,6 +28,10 @@ namespace HTTP_SERVICE
             std::unordered_map<std::string, HTTP_SERVICE::S_PTR_HTTP_SESSION> m_SessionInfo;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             HTTP_SERVICE::S_PTR_HTTP_UTILITY m_httpUtility;
+            HttpSessionManager(const HttpSessionManager&) = delete;
+            HttpSessionManager& operator=(const HttpSessionManager&) = delete;
+            HttpSessionManager(const HttpSessionManager&&) = delete;
+            HttpSessionManager& operator=(const HttpSessionManager&&) = delete;
     };
 
     typedef std::shared_ptr<HTTP_SERVICE::HttpSessionManager> S_PTR_HTTP_SESSION_MANAGER;

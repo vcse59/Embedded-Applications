@@ -57,7 +57,8 @@ std::string HTTPUtility::generateHttpResponse(const std::string& content, const 
     std::stringstream response;
     response << "HTTP/1.1 200 OK\r\n";
     response << "Content-Type: text/html\r\n";
-    response << "Set-Cookie: sessionID=" << sessionId << "\r\n"; // Embed session ID in cookie
+//    response << "Set-Cookie: sessionID=" << sessionId << "\r\n"; // Embed session ID in cookie
+    response << "Set-Cookie: sessionID=" << generateSessionID() << "\r\n"; // Embed session ID in cookie
     response << "Content-Length: " << content.size() << "\r\n\r\n";
     response << content;
 

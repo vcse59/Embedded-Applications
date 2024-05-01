@@ -8,6 +8,7 @@ namespace NetworkClass
     class NetworkClassInterface
     {
         public:
+            NetworkClassInterface(){}
             virtual ~NetworkClassInterface(){}
             virtual COMMON_DEFINITIONS::eSTATUS createServer() = 0;
             virtual COMMON_DEFINITIONS::eSTATUS connectToServer() = 0;
@@ -18,6 +19,12 @@ namespace NetworkClass
 
         protected:
             unsigned int mPortNumber;
+
+        private:
+            NetworkClassInterface(const NetworkClassInterface&) = delete;
+            NetworkClassInterface& operator=(const NetworkClassInterface&) = delete;
+            NetworkClassInterface(const NetworkClassInterface&&) = delete;
+            NetworkClassInterface& operator=(const NetworkClassInterface&&) = delete;
     };
     typedef std::shared_ptr<NetworkClass::NetworkClassInterface> S_PTR_NETWORK_CLASS_INTERFACE;
 }
