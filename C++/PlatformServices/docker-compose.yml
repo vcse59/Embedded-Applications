@@ -1,8 +1,0 @@
-version: '3'
-
-services:
-  mycppapp:
-    image: vivekcse59/threadapp:0.2
-    deploy:
-      replicas: 3  # Scale the C++ service to run on 3 nodes in the Swarm
-
