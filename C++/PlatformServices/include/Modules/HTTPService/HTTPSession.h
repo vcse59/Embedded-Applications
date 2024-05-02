@@ -2,8 +2,10 @@
 #define __HTTP_SESSION_H_
 
 #include <chrono>
+
 #include "CommonClasses/CommonDefinitions.h"
 #include "Modules/Logger/Logger.h"
+#include "Modules/HTTPService/HTTPParams.h"
 
 namespace HTTP_SERVICE
 {
@@ -16,6 +18,7 @@ namespace HTTP_SERVICE
             bool isSessionAlive();
             void setSessionTimeout(std::chrono::microseconds microSeconds);
             std::chrono::microseconds getSessionTimeout() const;
+            void processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams);
 
         private:
 

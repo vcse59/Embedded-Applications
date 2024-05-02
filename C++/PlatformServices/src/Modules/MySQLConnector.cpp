@@ -7,7 +7,6 @@ using namespace std;
 
 MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger)
 {
-
 }
 
 MySQLConnector::~MySQLConnector()
@@ -21,7 +20,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::connectToDBService()
     {
         /* Create a connection */
         m_DBdriver = get_driver_instance();
-        m_DBconnection = m_DBdriver->connect("tcp://127.0.0.1:3306", "test", "Test@143");
+        m_DBconnection = m_DBdriver->connect("tcp://192.168.6.26:3306", "test", "Test@143");
     }
     catch(sql::SQLException& e)
     {
@@ -76,6 +75,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::executeQuery(std::string tableName,
                                                         std::string queryString,
                                                         COMMON_DEFINITIONS::eQUERY_TYPE queryType)
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     try
     {
         if (isTableExists(tableName) != COMMON_DEFINITIONS::eSTATUS::NOT_FOUND)
@@ -141,6 +141,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDMLQuery(std::string queryStr
 {
     try
     {
+        (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Query string : " << queryString << std::endl;
         sql::Statement* createStatement = m_DBconnection->createStatement();
         createStatement->execute("USE " + m_DbName);
 

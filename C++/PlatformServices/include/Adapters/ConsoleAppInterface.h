@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef __INTERFACE_H__
-#define __INTERFACE_H__
+#ifndef __CONSOLE_APP_INTERFACE_H__
+#define __CONSOLE_APP_INTERFACE_H__
 
 // Include header files
 #include "Interfaces/DataBaseTableInterface.h"

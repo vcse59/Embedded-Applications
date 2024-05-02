@@ -58,7 +58,48 @@ int main(int argc, char *argv[])
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ntwkInteface = consoleApp->getTCPServer();
     
+    // Initialize the Database
+    DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbConnector = consoleApp->getDBInstance();
+    COMMON_DEFINITIONS::eSTATUS status = dbConnector->connectToDBService();
+
+    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS){
+        std::cout << "Connected to MySQL" << std::endl;
+    }
+    else{
+        std::cout << "Not connected" << std::endl;
+    }
+
+    status = dbConnector->createDataBase("Test1");
+
+    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+    {
+        std::cout << "DB Created Successfully" << std::endl;
+    }
+    else
+    {
+        std::cout << "DB Creation failed" << std::endl;
+    }
+
     
+    // Define table name
+    std::string tableName = "sampleTable";
+
+    // Create table
+    string createTableQuery = "CREATE TABLE " + tableName +" ("
+                                "id INT AUTO_INCREMENT PRIMARY KEY,"
+                                "Host VARCHAR(50),"
+                                "Payload LONGTEXT"
+                              ")";
+
+    status == dbConnector->executeQuery(tableName, createTableQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_DEFINITION);
+    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+    {
+        std::cout << "Table created successfully" << std::endl;
+    }
+    else{
+        std::cout << "Unable to create table" << std::endl;
+    }
+
     // Start a thread that waits for user input
     std::thread userThread(userInput, ntwkInteface);
 
@@ -70,12 +111,12 @@ int main(int argc, char *argv[])
     userThread.join();
     
 
-    /*
-    std::shared_ptr<FRAMEWORK::ConsoleAppInterface> intf = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    
+    /*std::shared_ptr<FRAMEWORK::ConsoleAppInterface> intf = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
 
-    DATABASE_SERVICE::DataBaseConnectorInterface& dbConnector = intf->getDBInstance();
+    DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbConnector = intf->getDBInstance();
 
-    COMMON_DEFINITIONS::eSTATUS status = dbConnector.connectToDBService();
+    COMMON_DEFINITIONS::eSTATUS status = dbConnector->connectToDBService();
 
     if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS){
         std::cout << "Connected to MySQL" << std::endl;
@@ -84,7 +125,7 @@ int main(int argc, char *argv[])
         std::cout << "Not connected" << std::endl;
     }
 
-    status = dbConnector.createDataBase("Test1");
+    status = dbConnector->createDataBase("Test1");
 
     if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
     {
@@ -106,7 +147,7 @@ int main(int argc, char *argv[])
                                 "age INT"
                               ")";
 
-    status == dbConnector.executeQuery(tableName, createTableQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_DEFINITION);
+    status == dbConnector->executeQuery(tableName, createTableQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_DEFINITION);
     if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
     {
         std::cout << "Table created successfully" << std::endl;
@@ -118,9 +159,9 @@ int main(int argc, char *argv[])
     //Insert table query
     std::string name = "Vivek";
     
-    for (int i = 0; i < 100000; i++){
+    for (int i = 0; i < 10000; i++){
         std::string insertQuery = "INSERT INTO " + tableName + " (name ,age) VALUES (\"" + name + std::to_string(i + 1) + "\" , " + std::to_string(((i * 30) + 30) % 100) + ")";
-        status == dbConnector.executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
+        status == dbConnector->executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
         if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
         {
             std::cout << "Record created successfully" << std::endl;
@@ -128,8 +169,7 @@ int main(int argc, char *argv[])
         else{
             std::cout << "Unable to insert record" << std::endl;
         }
-    }
-    */
+    }*/
 
     /*std::shared_ptr<std::string> jsonString = std::make_shared<std::string>("{\"name\": \"John\", \"age\": 30}");
     std::shared_ptr<PARSER_INTERFACE::DataParserInterface> parser = std::make_shared<JSON_SERVICE::jsonParser>(jsonString);

@@ -62,12 +62,12 @@ COMMON_DEFINITIONS::eSTATUS TCPClient::connectToServer()
     return m_SocketStatus;
 }
 
-COMMON_DEFINITIONS::eSTATUS TCPClient::sendMessage(const char* message)
+COMMON_DEFINITIONS::eSTATUS TCPClient::sendMessage(int socket, const std::string& message)
 {
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
-COMMON_DEFINITIONS::eSTATUS TCPClient::receiveMessage(const char* messageBuffer)
+COMMON_DEFINITIONS::eSTATUS TCPClient::receiveMessage(int socket, std::string& message)
 {
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <mutex>
 
 /*
    Include directly the different
@@ -50,6 +51,7 @@ namespace DATABASE_SERVICE
             sql::PreparedStatement *m_PrepStatement = NULL;
             std::string m_DbName;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
+            std::mutex  m_Mutex;
 
             MySQLConnector(const MySQLConnector&) = delete;
             MySQLConnector& operator=(const MySQLConnector&) = delete;

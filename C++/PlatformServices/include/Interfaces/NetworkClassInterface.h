@@ -12,8 +12,8 @@ namespace NetworkClass
             virtual ~NetworkClassInterface(){}
             virtual COMMON_DEFINITIONS::eSTATUS createServer() = 0;
             virtual COMMON_DEFINITIONS::eSTATUS connectToServer() = 0;
-            virtual COMMON_DEFINITIONS::eSTATUS sendMessage(const char* message) = 0;
-            virtual COMMON_DEFINITIONS::eSTATUS receiveMessage(const char* messageBuffer) = 0;
+            virtual COMMON_DEFINITIONS::eSTATUS sendMessage(int socket, const std::string& message) = 0;
+            virtual COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) = 0;
             virtual COMMON_DEFINITIONS::eSTATUS closeSocket() = 0;
             virtual int getConnectionId() const = 0;
 

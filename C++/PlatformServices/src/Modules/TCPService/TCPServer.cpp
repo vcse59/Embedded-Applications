@@ -136,74 +136,43 @@ eSTATUS TCPServer::createServer()
 
 void TCPServer::handle_connection(int client_socket) {
 
-    char buffer[MAX_BUFFER_SIZE] = {0,};
     std::string receivedData;
 
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
 
-    // Receive data
-    ssize_t bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
-    if (bytes_received < 0) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            std::cerr << "Receive timeout" << std::endl;
-        } else {
-            std::cerr << "Receiving error" << std::endl;
-        }
-    } else if (bytes_received == 0) {
-        std::cerr << "Connection closed by peer" << std::endl;
-    } else {
-        // Process received data
-        receivedData += buffer;
-        memset(buffer, 0, MAX_BUFFER_SIZE);
-    }
+    receiveMessage(client_socket, receivedData);
 
     std::cout << "Received HTTP request:\n" << receivedData << std::endl;
 
-    HTTP_SERVICE::HttpParams params(m_logger);
-    params.parseHttpResponse(receivedData);
-
-    std::cout << "Method : " << params.getHTTPMethods() << std::endl;
-    std::cout << "Host IP : " << params.getHostIP() << std::endl;
+    HTTP_SERVICE::HttpParams params(m_logger, receivedData);
+    consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
 
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
-
-    std::string responseBody = httpUtility->parseHttpResponse(receivedData.c_str());
-    std::string sessionId;
-    std::unordered_map<std::string, std::string> headerMap = httpUtility->parseHttpHeaders(receivedData, sessionId);
-
-    std::unordered_map<std::string, std::string>::iterator it = headerMap.begin();
-    //std::cout << "HEADER START" << std::endl;
-    //std::cout << "Session ID : " << sessionId << std::endl;
-    /*while(it != headerMap.end()){
-        std::cout << it->first << " " << it->second << std::endl;
-        it++;
-    }*/
-    //std::cout << "HEADER END" << std::endl;
-
-    COMMON_DEFINITIONS::eHTTP_SESSION_STATUS httpStatus = consoleApp->getHTTPSessionManager()->isValidSession(sessionId);
-    COMMON_DEFINITIONS::eHTTP_SESSION_STATUS sessionStatus = consoleApp->getHTTPSessionManager()->addSession(sessionId);
-    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "SESSION STATUS : " << httpStatus << std::endl;
-    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "SESSION ID : " << sessionId << std::endl;
-
-    if (responseBody.length() > 0){
-        std::shared_ptr<std::string> jsonString = std::make_shared<std::string>(responseBody);
-        std::shared_ptr<PARSER_INTERFACE::DataParserInterface> parser = std::make_shared<JSON_SERVICE::jsonParser>(m_logger, jsonString);
-        parser->deserialize();
-        //std::cout << parser->dumpData() << std::endl;
-    }
-
     // Read index.html content
     std::string index_html_content = httpUtility->readIndexHtml("webFiles/index.html");
 
     // Generate HTTP response
+    std::string sessionId;
     std::string http_response = httpUtility->generateHttpResponse(index_html_content, sessionId);
     //std::cout << "Sending response : " << http_response << std::endl;
 
+    sendMessage(client_socket, http_response.c_str());
+
+    close(client_socket);
+}
+
+COMMON_DEFINITIONS::eSTATUS TCPServer::connectToServer()
+{
+    return eSTATUS::SUCCESS;
+}
+
+eSTATUS TCPServer::sendMessage(int socket, const std::string& message)
+{
     // Send HTTP response
-    const char* data = http_response.c_str();
-    size_t remaining = http_response.size();
+    const char* data = message.c_str();
+    size_t remaining = message.length();
     while (remaining > 0) {
-        ssize_t sent = send(client_socket, data, remaining, 0);
+        ssize_t sent = send(socket, data, remaining, 0);
         if (sent == -1) {
             // Handle send error
             std::cerr << "Error sending data\n";
@@ -219,21 +188,29 @@ void TCPServer::handle_connection(int client_socket) {
         }
     }
 
-    close(client_socket);
-}
-
-COMMON_DEFINITIONS::eSTATUS TCPServer::connectToServer()
-{
     return eSTATUS::SUCCESS;
 }
 
-eSTATUS TCPServer::sendMessage(const char* message)
+eSTATUS TCPServer::receiveMessage(int socket, std::string& message)
 {
-    return eSTATUS::SUCCESS;
-}
+    char messageBuffer[MAX_BUFFER_SIZE] = {0,};
 
-eSTATUS TCPServer::receiveMessage(const char* messageBuffer)
-{
+    // Receive data
+    ssize_t bytes_received = recv(socket, messageBuffer, sizeof(messageBuffer), 0);
+    if (bytes_received < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            std::cerr << "Receive timeout" << std::endl;
+        } else {
+            std::cerr << "Receiving error" << std::endl;
+        }
+    } else if (bytes_received == 0) {
+        std::cerr << "Connection closed by peer" << std::endl;
+    } else {
+        // Process received data
+        message += messageBuffer;
+        memset(messageBuffer, 0, MAX_BUFFER_SIZE);
+    }
+
     return eSTATUS::SUCCESS;
 }
 

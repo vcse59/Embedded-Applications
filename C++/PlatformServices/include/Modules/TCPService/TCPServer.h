@@ -33,8 +33,8 @@ namespace NetworkClass
 
             COMMON_DEFINITIONS::eSTATUS createServer() override;
             COMMON_DEFINITIONS::eSTATUS connectToServer() override;
-            COMMON_DEFINITIONS::eSTATUS sendMessage(const char* message) override;
-            COMMON_DEFINITIONS::eSTATUS receiveMessage(const char* messageBuffer) override;
+            COMMON_DEFINITIONS::eSTATUS sendMessage(int socket, const std::string& message) override;
+            COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) override;
             COMMON_DEFINITIONS::eSTATUS closeSocket() override;
             int getConnectionId() const override;
 
