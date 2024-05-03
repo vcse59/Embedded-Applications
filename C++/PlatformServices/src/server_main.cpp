@@ -19,7 +19,7 @@ using namespace COMMON_DEFINITIONS;
 
 void userInput(NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE intf)
 {
-    std::cout << "Press any key ('exit' to quit):" << std::endl;
+    std::cout << "Press any 'exit' to quit:" << std::endl;
     
     const char* exitStr = "exit";
     char input[5]; // Buffer to hold the input string
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     // Create table
     string createTableQuery = "CREATE TABLE " + tableName +" ("
                                 "id INT AUTO_INCREMENT PRIMARY KEY,"
-                                "Host VARCHAR(50),"
+                                "SessionID VARCHAR(50),"
                                 "Payload LONGTEXT"
                               ")";
 

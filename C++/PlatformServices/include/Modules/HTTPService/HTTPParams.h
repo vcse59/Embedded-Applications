@@ -2,6 +2,10 @@
 #define __HTTP_PARAMS_H__
 
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <unordered_map>
+
 #include "Modules/HTTPService/HTTPDefinitions.h"
 #include "Modules/Logger/Logger.h"
 
@@ -13,10 +17,13 @@ namespace HTTP_SERVICE
             HttpParams(LOGGER_SERVICE::S_PTR_LOGGER logger, std::string httpResponse);
             ~HttpParams();
 
-            void parseHttpResponse();
-            HTTP_SERVICE::eHTTP_METHODS getHTTPMethods() const
+            std::string getParams(HTTP_SERVICE::eHEADER_FIELD method) const
             {
-                return m_Method;
+                std::string paramVal;
+                auto it = m_HeaderInfo.find(method);
+                if (it != m_HeaderInfo.end())
+                    paramVal = it->second;
+                return paramVal;
             }
 
             std::string getHostIP() const 
@@ -24,22 +31,32 @@ namespace HTTP_SERVICE
                 return m_HostIP;
             }
 
-            std::string getHTTPResponse() const
+            std::string getHTTPRequest() const
             {
-                return m_HttpResponse;
+                return m_HttpRequest;
+            }
+
+            void parse();
+            std::string generateHttpResponse();
+
+            void removeSpaces(std::string& str)
+            {
+                str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
             }
 
         private:
-            std::string m_HttpResponse;
+            std::string m_HttpRequest;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             HTTP_SERVICE::eHTTP_METHODS m_Method = HTTP_SERVICE::eHTTP_METHODS::HTTP_UNKNOWN;
             HTTP_SERVICE::eCONTENT_TYPE m_ContentType = HTTP_SERVICE::eCONTENT_TYPE::APPLICATION_UNKNOWN;
             std::string m_SessonID;
             std::string m_HostIP;
+            std::unordered_map<HTTP_SERVICE::eHEADER_FIELD, std::string> m_HeaderInfo;
             HttpParams(const HttpParams&) = delete;
             HttpParams& operator=(const HttpParams&) = delete;
             HttpParams(const HttpParams&&) = delete;
             HttpParams& operator=(const HttpParams&&) = delete;
+            void generateCookieIfRequired();
     };
 }
 

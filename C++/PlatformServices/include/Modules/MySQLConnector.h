@@ -46,9 +46,9 @@ namespace DATABASE_SERVICE
             COMMON_DEFINITIONS::eSTATUS isDataBaseExists(std::string dbName);
             COMMON_DEFINITIONS::eSTATUS isTableExists(std::string tableName);
 
-            sql::Driver *m_DBdriver = NULL;
-            sql::Connection *m_DBconnection = NULL;
-            sql::PreparedStatement *m_PrepStatement = NULL;
+            sql::Driver *m_DBdriver = nullptr;
+            sql::Connection *m_DBconnection = nullptr;
+            sql::PreparedStatement *m_PrepStatement = nullptr;
             std::string m_DbName;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             std::mutex  m_Mutex;

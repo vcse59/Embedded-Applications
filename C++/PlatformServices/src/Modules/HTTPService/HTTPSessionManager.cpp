@@ -39,12 +39,7 @@ COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::isValidSession(std:
 
 void HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams)
 {
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
-
-    std::string sessionId = "None";
-    std::unordered_map<std::string, std::string> headerMap = httpUtility->parseHttpHeaders(httpParams.getHTTPResponse(), sessionId);
-
+    std::string sessionId = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
     LOGGER_SERVICE::Logger* logger = m_logger.get();
     (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Session Id Parsed : " << sessionId << std::endl;
 

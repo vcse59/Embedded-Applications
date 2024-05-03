@@ -8,33 +8,25 @@ if [ -n "$1" ]; then
     buildType=$1
 fi
 
-# Remove the directory if it already exists
-if [ -d "$CMAKE_SERVER" ]; then
-    echo "Directory 'CMAKE_SERVER' already exists..Removing it."
-    rm -rf "$CMAKE_SERVER"
-fi
+if [ ! -d "$CMAKE_SERVER" ]; then
+	# Create server cmake directory
+	mkdir -p "$CMAKE_SERVER"
 
-# Create server cmake directory
-mkdir -p "$CMAKE_SERVER"
-
-# Create the directory
-if [ $? -eq 0 ]; then
-    echo "Directory '$CMAKE_SERVER' created successfully."
+	# Create the directory
+	if [ $? -eq 0 ]; then
+    		echo "Directory '$CMAKE_SERVER' created successfully."
+	fi
 fi
 
 
-# Remove the directory if it already exists
-if [ -d "$CMAKE_CLIENT" ]; then
-    echo "Directory 'CMAKE_CLIENT' already exists..Removing it."
-    rm -rf "$CMAKE_CLIENT"
-fi
+if [ ! -d "$CMAKE_CLIENT" ]; then
+	# Create server cmake directory
+	mkdir -p "$CMAKE_CLIENT"
 
-# Create client cmake directory
-mkdir -p "$CMAKE_CLIENT"
-
-# Create the directory
-if [ $? -eq 0 ]; then
-    echo "Directory '$CMAKE_CLIENT' created successfully."
+	# Create the directory
+	if [ $? -eq 0 ]; then
+    		echo "Directory '$CMAKE_CLEINT' created successfully."
+	fi
 fi
 
 # Change to server directory and run cmake command

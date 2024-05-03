@@ -142,18 +142,12 @@ void TCPServer::handle_connection(int client_socket) {
 
     receiveMessage(client_socket, receivedData);
 
-    std::cout << "Received HTTP request:\n" << receivedData << std::endl;
-
     HTTP_SERVICE::HttpParams params(m_logger, receivedData);
     consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
 
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
-    // Read index.html content
-    std::string index_html_content = httpUtility->readIndexHtml("webFiles/index.html");
 
-    // Generate HTTP response
-    std::string sessionId;
-    std::string http_response = httpUtility->generateHttpResponse(index_html_content, sessionId);
+    std::string http_response = params.generateHttpResponse();
     //std::cout << "Sending response : " << http_response << std::endl;
 
     sendMessage(client_socket, http_response.c_str());

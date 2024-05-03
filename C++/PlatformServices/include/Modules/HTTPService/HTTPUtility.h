@@ -14,11 +14,8 @@ namespace HTTP_SERVICE
 
             HTTPUtility(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger){}
             ~HTTPUtility(){}
-            std::string parseHttpResponse(const char* httpResponse);
-            std::string readIndexHtml(const std::string& filename);
-            std::string generateHttpResponse(const std::string& content, const std::string& sessionId);
             std::string generateSessionID();
-            std::unordered_map<std::string, std::string> parseHttpHeaders(const std::string& headers, std::string& sessionId);
+            std::string readIndexHtml(const std::string& filename);
             std::string base64_encode(const std::string &input);
             std::string base64_decode(const std::string &input);
 
