@@ -6,6 +6,7 @@
 #include <random>
 #include <iomanip>
 #include <openssl/sha.h>
+#include <poll.h>
 
 #include "Modules/TCPService/TCPServer.h"
 #include "Modules/ConsoleMain.h"
@@ -17,120 +18,111 @@ using namespace COMMON_DEFINITIONS;
 
 TCPServer::TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumber)
 {
-    m_logger        =   logger;
-    mPortNumber     =   portNumber;
+	m_logger        =   logger;
+	mPortNumber     =   portNumber;
 }
 
 TCPServer::~TCPServer()
 {
-    cout << "Close the web server" << endl;
-    for (unsigned int i = 0; i < MAX_CONNECTIONS; i++)
-    {
-        if (mClientSockets[i] >= 0)
-            close(mClientSockets[i]);
-    }
+	cout << "Close the web server" << endl;
+	for (unsigned int i = 0; i < MAX_CONNECTIONS; i++)
+	{
+		if (mClientSockets[i] >= 0)
+			close(mClientSockets[i]);
+	}
 
-    close(mServerSocket);
-    mServerSocket = -1;
+	close(mServerSocket);
+	mServerSocket = -1;
 
-    memset(mClientSockets, -1, sizeof(int) * MAX_CONNECTIONS);
+	memset(mClientSockets, -1, sizeof(int) * MAX_CONNECTIONS);
 }
 
 eSTATUS TCPServer::createServer()
 {
-    int opt = 1;   
-    int addrlen , new_socket , activity, i , valread , sd;   
-    int max_sd;   
-    struct sockaddr_in address;   
-         
-    char buffer[MAX_BUFFER_SIZE] = {'\0',};  //data buffer of 1K  
-         
-    //create a master socket  
-    if( (mServerSocket = socket(AF_INET , SOCK_STREAM , 0)) == 0)   
-    {   
-        perror("socket failed");   
-        exit(EXIT_FAILURE);   
-    }   
-     
-    //set master socket to allow multiple connections ,  
-    //this is just a good habit, it will work without this  
-    if( setsockopt(mServerSocket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *)&opt,  
-          sizeof(opt)) < 0 )   
-    {   
-        perror("setsockopt");   
-        exit(EXIT_FAILURE);   
-    }   
-     
-    //type of socket created  
-    address.sin_family = AF_INET;   
-    address.sin_addr.s_addr = INADDR_ANY;   
-    address.sin_port = htons( mPortNumber );   
-         
-    //bind the socket to localhost port 8888  
-    if (bind(mServerSocket, (struct sockaddr *)&address, sizeof(address))<0)   
-    {   
-        perror("bind failed");   
-        exit(EXIT_FAILURE);   
-    }   
-    printf("Listener on port %d \n", PORT);   
-         
-    //try to specify maximum of 3 pending connections for the master socket  
-    if (listen(mServerSocket, MAX_CONNECTIONS) < 0)   
-    {   
-        perror("listen");   
-        exit(EXIT_FAILURE);   
-    }   
+	int opt = 1;   
+	int addrlen , new_socket , activity, i , valread , sd;   
+	int max_sd;   
+	struct sockaddr_in address;   
+
+	char buffer[MAX_BUFFER_SIZE] = {'\0',};  //data buffer of 1K  
+
+	//create a master socket  
+	if( (mServerSocket = socket(AF_INET , SOCK_STREAM , 0)) == 0)   
+	{   
+		perror("socket failed");   
+        mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
+	}   
+
+	//set master socket to allow multiple connections ,  
+	//this is just a good habit, it will work without this  
+	if( setsockopt(mServerSocket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *)&opt,  
+				sizeof(opt)) < 0 )   
+	{   
+		perror("setsockopt");   
+        mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
+	}   
+
+	//type of socket created  
+	address.sin_family = AF_INET;   
+	address.sin_addr.s_addr = INADDR_ANY;   
+	address.sin_port = htons( mPortNumber );   
+
+	//bind the socket to localhost port 8888  
+	if (bind(mServerSocket, (struct sockaddr *)&address, sizeof(address))<0)   
+	{   
+		perror("bind failed");   
+        mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
+	}   
+	printf("Listener on port %d \n", PORT);   
+
+	//try to specify maximum of 3 pending connections for the master socket  
+	if (listen(mServerSocket, MAX_CONNECTIONS) < 0)   
+	{   
+		perror("listen");   
+        mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
+	}   
+
+	isServerClosed = false;
+	//accept the incoming connection  
+	addrlen = sizeof(address);   
+	puts("Waiting for connections ...");   
+
+	struct pollfd fds[MAX_CONNECTIONS + 1]; // Plus 1 for master socket
+    memset(fds, 0, sizeof(fds));
+
+	// Initialize pollfd structure for master socket
+    fds[0].fd = mServerSocket;
+   	fds[0].events = POLLIN;
+
+	while(!isServerClosed)   
+	{  
+	    int new_socket;
+
+	    // Call poll() to wait for events
+        activity = poll(fds, MAX_CONNECTIONS + 1, 0);
     
-    isServerClosed = false;
-    //accept the incoming connection  
-    addrlen = sizeof(address);   
-    puts("Waiting for connections ...");   
-         
-    while(!isServerClosed)   
-    {  
-        int client_socket = -1;
-        struct sockaddr_in client_addr;
-        socklen_t client_addr_len = sizeof(client_addr);
-        fd_set readfds;
-        struct timeval timeout;
-
-        // Clear the set and add server socket to it
-        FD_ZERO(&readfds);
-        FD_SET(mServerSocket, &readfds);
-
-        // Set timeout
-        timeout.tv_sec = 1;  // 5 seconds
-        timeout.tv_usec = 0;
-
-        // Wait for activity on the server socket
-        int activity = select(mServerSocket + 1, &readfds, NULL, NULL, &timeout);
         if (activity == -1) {
-            perror("Select error");
+            perror("poll error");
             mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
             return mStatus;
         } else if (activity == 0) {
             continue;
         }
-
-        // Accept incoming connection if available
-        if (FD_ISSET(mServerSocket, &readfds)) {
-            if ((client_socket = accept(mServerSocket, (struct sockaddr *)&client_addr, &client_addr_len)) < 0) {
-                perror("Accept failed");
-                continue;
+    
+        // Check for incoming connection on master socket
+        if (fds[0].revents & POLLIN) {
+            if ((new_socket = accept(mServerSocket, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
+                perror("accept failed");
+                exit(EXIT_FAILURE);
             }
+            printf("New connection, socket fd is %d, IP is : %s, port : %d\n", new_socket, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 
-	    char ipString[INET6_ADDRSTRLEN]; // Maximum length for IPv6 address string
-            struct sockaddr_in *ipv4 = (struct sockaddr_in *)(&client_addr);
-            inet_ntop(AF_INET, &(ipv4->sin_addr), ipString, INET_ADDRSTRLEN);
-            printf("New client connected : %d from %s\n", client_socket, ipString);
-
-            // Handle client request here
-            // Spawn a new thread to handle the connection
-            std::thread threadObject(&TCPServer::handle_connection, this, client_socket);
-            threadObject.join();
+        // Handle client request here
+        // Spawn a new thread to handle the connection
+        std::thread threadObject(&TCPServer::handle_connection, this, new_socket);
+        threadObject.join();
         }
-    }  
-
+    }
     return mStatus;
 }
 

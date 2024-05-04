@@ -66,10 +66,10 @@ void HttpParams::parse()
 
     while(getline(streamString, line))
     {
-        (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << line << std::endl;
         // Remove leading and trailing whitespaces from header value
         line.erase(0, line.find_first_not_of(" \t"));
         line.erase(line.find_last_not_of(" \t") + 1);   
+        (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "DATA : " << line << std::endl;
 
         // parse method and resouce url
         if (line.find(httpString) != std::string::npos){
@@ -89,7 +89,6 @@ void HttpParams::parse()
 
                     // Remove space it there are any
                     removeSpaces(parsedString);
-                    std::cout <<"********" << parsedString << std::endl;
                     if (parsedString.length() > 0)
                         m_HeaderInfo.insert(std::pair<HTTP_SERVICE::eHEADER_FIELD, std::string>(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL, parsedString));
                 }
