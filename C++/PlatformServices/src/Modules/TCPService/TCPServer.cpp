@@ -148,7 +148,6 @@ void TCPServer::handle_connection(int client_socket) {
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
     std::string http_response = params.generateHttpResponse();
-    //std::cout << "Sending response : " << http_response << std::endl;
 
     sendMessage(client_socket, http_response.c_str());
 

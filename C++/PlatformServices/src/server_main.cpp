@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
     string createTableQuery = "CREATE TABLE " + tableName +" ("
                                 "id INT AUTO_INCREMENT PRIMARY KEY,"
                                 "SessionID VARCHAR(50),"
+                                "ResourceURL    LONGTEXT,"
                                 "Payload LONGTEXT"
                               ")";
 
