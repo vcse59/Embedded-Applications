@@ -5,12 +5,20 @@
 
 namespace NetworkClass
 {
+    enum eLISTENING_MODE
+    {
+        POLL_MODE       = 0,
+        SELECT_MODE     = 1,
+        EPOLL_MODE      = 2,
+        DEFAULT_MODE    = POLL_MODE
+    };
+
     class NetworkClassInterface
     {
         public:
             NetworkClassInterface(){}
             virtual ~NetworkClassInterface(){}
-            virtual COMMON_DEFINITIONS::eSTATUS createServer() = 0;
+            virtual COMMON_DEFINITIONS::eSTATUS createServer(enum NetworkClass::eLISTENING_MODE mode = NetworkClass::eLISTENING_MODE::DEFAULT_MODE) = 0;
             virtual COMMON_DEFINITIONS::eSTATUS connectToServer() = 0;
             virtual COMMON_DEFINITIONS::eSTATUS sendMessage(int socket, const std::string& message) = 0;
             virtual COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) = 0;

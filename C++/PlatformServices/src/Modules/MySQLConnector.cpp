@@ -128,6 +128,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::executeQuery(std::string tableName,
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDDLQuery(std::string queryString)
 {
+    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << queryString << std::endl;
     sql::Statement* createStatement = m_DBconnection->createStatement();
     try
     {

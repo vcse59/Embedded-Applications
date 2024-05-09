@@ -36,7 +36,7 @@ TCPClient::~TCPClient()
     closeSocket();
 }
 
-COMMON_DEFINITIONS::eSTATUS TCPClient::createServer()
+COMMON_DEFINITIONS::eSTATUS TCPClient::createServer(enum NetworkClass::eLISTENING_MODE mode)
 {
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }

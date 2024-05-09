@@ -87,9 +87,10 @@ int main(int argc, char *argv[])
     // Create table
     string createTableQuery = "CREATE TABLE " + tableName +" ("
                                 "id INT AUTO_INCREMENT PRIMARY KEY,"
-                                "SessionID VARCHAR(50),"
-                                "ResourceURL    LONGTEXT,"
-                                "Payload LONGTEXT"
+                                "SESSIONID VARCHAR(50),"
+                                "HTTPMETHOD VARCHAR(10),"
+                                "RESOURCEURL    LONGTEXT,"
+                                "DATARAW LONGTEXT"
                               ")";
 
     status == dbConnector->executeQuery(tableName, createTableQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_DEFINITION);
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
     std::thread userThread(userInput, ntwkInteface);
 
     // Start server
-    std::thread th1(&NetworkClassInterface::createServer, ntwkInteface.get());    
+    std::thread th1(&NetworkClassInterface::createServer, ntwkInteface.get(), NetworkClass::eLISTENING_MODE::EPOLL_MODE);    
     
     // Join the thread
     th1.join();

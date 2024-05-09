@@ -31,7 +31,7 @@ namespace NetworkClass
             TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumber);
             ~TCPServer();
 
-            COMMON_DEFINITIONS::eSTATUS createServer() override;
+            COMMON_DEFINITIONS::eSTATUS createServer(enum NetworkClass::eLISTENING_MODE mode = NetworkClass::eLISTENING_MODE::DEFAULT_MODE) override;
             COMMON_DEFINITIONS::eSTATUS connectToServer() override;
             COMMON_DEFINITIONS::eSTATUS sendMessage(int socket, const std::string& message) override;
             COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) override;
@@ -55,6 +55,10 @@ namespace NetworkClass
             TCPServer& operator=(const TCPServer&) = delete;
             TCPServer(const TCPServer&&) = delete;
             TCPServer& operator=(const TCPServer&&) = delete;
+
+            COMMON_DEFINITIONS::eSTATUS useSelect();
+            COMMON_DEFINITIONS::eSTATUS usePoll();
+            COMMON_DEFINITIONS::eSTATUS useEPoll();
     };
 }
 

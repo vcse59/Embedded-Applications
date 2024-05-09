@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <openssl/sha.h>
 #include <poll.h>
+#include <sys/epoll.h>
 
 #include "Modules/TCPService/TCPServer.h"
 #include "Modules/ConsoleMain.h"
@@ -37,7 +38,7 @@ TCPServer::~TCPServer()
 	memset(mClientSockets, -1, sizeof(int) * MAX_CONNECTIONS);
 }
 
-eSTATUS TCPServer::createServer()
+eSTATUS TCPServer::createServer(enum NetworkClass::eLISTENING_MODE mode)
 {
 	int opt = 1;   
 	int addrlen , new_socket , activity, i , valread , sd;   
@@ -82,12 +83,93 @@ eSTATUS TCPServer::createServer()
         mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
 	}   
 
-	isServerClosed = false;
-	//accept the incoming connection  
+    switch(mode)
+    {
+        case NetworkClass::eLISTENING_MODE::POLL_MODE:
+            mStatus = usePoll();
+            break;
+        case NetworkClass::eLISTENING_MODE::SELECT_MODE:
+            mStatus = useSelect();
+            break;
+        case NetworkClass::eLISTENING_MODE::EPOLL_MODE:
+            mStatus = useEPoll();
+            break;
+        default :
+            mStatus = usePoll();
+    }
+
+    return mStatus;
+}
+
+eSTATUS TCPServer::useSelect()
+{
+    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Use Select Call" << std::endl;
+	int addrlen , new_socket , activity;   
+	struct sockaddr_in address;
+
+    isServerClosed = false;
 	addrlen = sizeof(address);   
 	puts("Waiting for connections ...");   
 
-	struct pollfd fds[MAX_CONNECTIONS + 1]; // Plus 1 for master socket
+
+    while(!isServerClosed)   
+	{  
+        int client_socket = -1;
+        struct sockaddr_in client_addr;
+        socklen_t client_addr_len = sizeof(client_addr);
+        fd_set readfds;
+        struct timeval timeout;
+
+        // Clear the set and add server socket to it
+        FD_ZERO(&readfds);
+        FD_SET(mServerSocket, &readfds);
+
+        // Set timeout
+        timeout.tv_sec = 5;  // 5 seconds
+        timeout.tv_usec = 0;
+
+        // Wait for activity on the server socket
+        int activity = select(mServerSocket + 1, &readfds, NULL, NULL, &timeout);
+        if (activity == -1) {
+            perror("Select error");
+            mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
+            return mStatus;
+        } else if (activity == 0) {
+            continue;
+        }
+
+        // Accept incoming connection if available
+        if (FD_ISSET(mServerSocket, &readfds)) {
+            if ((client_socket = accept(mServerSocket, (struct sockaddr *)&client_addr, &client_addr_len)) < 0) {
+                perror("Accept failed");
+                continue;
+            }
+
+	    char ipString[INET6_ADDRSTRLEN]; // Maximum length for IPv6 address string
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)(&client_addr);
+            inet_ntop(AF_INET, &(ipv4->sin_addr), ipString, INET_ADDRSTRLEN);
+            printf("New client connected : %d from %s\n", client_socket, ipString);
+
+        // Handle client request here
+        // Spawn a new thread to handle the connection
+            std::thread threadObject(&TCPServer::handle_connection, this, client_socket);
+        threadObject.join();
+        }
+    }
+    return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+}
+
+eSTATUS TCPServer::usePoll()
+{
+    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Use poll Call" << std::endl;
+	int addrlen , new_socket , activity;   
+	struct sockaddr_in address;
+
+    isServerClosed = false;
+	addrlen = sizeof(address);   
+	puts("Waiting for connections ...");   
+
+    struct pollfd fds[MAX_CONNECTIONS + 1]; // Plus 1 for master socket
     memset(fds, 0, sizeof(fds));
 
 	// Initialize pollfd structure for master socket
@@ -99,7 +181,7 @@ eSTATUS TCPServer::createServer()
 	    int new_socket;
 
 	    // Call poll() to wait for events
-        activity = poll(fds, MAX_CONNECTIONS + 1, 0);
+        activity = poll(fds, MAX_CONNECTIONS + 1, 5);
     
         if (activity == -1) {
             perror("poll error");
@@ -123,7 +205,74 @@ eSTATUS TCPServer::createServer()
         threadObject.join();
         }
     }
-    return mStatus;
+    return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+}
+
+eSTATUS TCPServer::useEPoll()
+{
+    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Use epoll Call" << std::endl;
+	int addrlen , new_socket , activity, epoll_fd;
+    struct  epoll_event events; 
+	struct sockaddr_in address;
+
+    isServerClosed = false;
+	//accept the incoming connection  
+	addrlen = sizeof(address);   
+	puts("Waiting for connections ..."); 
+
+    // Create epoll instance
+    if ((epoll_fd = epoll_create1(0)) == -1)
+    {
+        printf("Fail to create instance of epoll");
+        close(mServerSocket);
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
+    }
+
+    // Add server socket to epoll
+    struct epoll_event ev;
+    ev.events = EPOLLIN;
+    ev.data.fd = mServerSocket;
+
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, mServerSocket, &ev) == -1)
+    {
+        printf("Fail to add server socket to epoll : %d", errno);
+        close(mServerSocket);
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
+    }
+
+    while(!isServerClosed)
+    {
+        // Wait for events
+        activity = epoll_wait(epoll_fd, &events, 1, 5);
+        if (activity == -1)
+        {
+            printf("epoll wait failed");
+            close(mServerSocket);
+            return COMMON_DEFINITIONS::eSTATUS::ERROR;
+        }else if (activity == 0) {
+            continue;
+        }
+
+        // Handle events
+        if (events.data.fd == mServerSocket)
+        {
+            // Accept new connection
+            if ( (new_socket = accept(mServerSocket, (struct sockaddr*)&address, (socklen_t*)&addrlen)) == -1)
+            {
+                printf("Accept failed");
+                close(mServerSocket);
+                return COMMON_DEFINITIONS::eSTATUS::ERROR;
+            }
+
+            printf("New connection, socket fd is %d, IP is : %s, port : %d\n", new_socket, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+
+            // Handle client request here
+            // Spawn a new thread to handle the connection
+            std::thread threadObject(&TCPServer::handle_connection, this, new_socket);
+            threadObject.join();            
+        }
+    }
+    return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
 void TCPServer::handle_connection(int client_socket) {
@@ -135,11 +284,7 @@ void TCPServer::handle_connection(int client_socket) {
     receiveMessage(client_socket, receivedData);
 
     HTTP_SERVICE::HttpParams params(m_logger, receivedData);
-    consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
-
-    HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
-
-    std::string http_response = params.generateHttpResponse();
+    std::string http_response = consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
 
     sendMessage(client_socket, http_response.c_str());
 

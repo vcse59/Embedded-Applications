@@ -13,14 +13,8 @@ HttpSessionManager::~HttpSessionManager(){}
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::addSession(std::string sessionId){
 
     (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Entering HttpSessionManager::addSession" << std::endl;
-    COMMON_DEFINITIONS::eHTTP_SESSION_STATUS retVal = COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_EXISTS;
-    if (m_SessionInfo.find(sessionId) == m_SessionInfo.end())
-    {
-        m_SessionInfo.insert(std::pair<std::string, S_PTR_HTTP_SESSION>(sessionId, std::make_shared<HttpSession>(m_logger, sessionId)));
-        retVal = COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_ADDED;
-    }
     (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Exiting HttpSessionManager::addSession" << std::endl;
-    return retVal;
+    return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_ADDED;
 }
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::removeSession(std::string sessionId){
@@ -37,9 +31,10 @@ COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::isValidSession(std:
     return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_VALID;
 }
 
-void HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams)
+std::string HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams)
 {
     std::string sessionId = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+    std::string hostUrl = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_HOST);
     LOGGER_SERVICE::Logger* logger = m_logger.get();
     (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Session Id Parsed : " << sessionId << std::endl;
 
@@ -50,8 +45,8 @@ void HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
         sessionObject = it->second;
     }else{
         (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Creating new session for " << sessionId << std::endl;
-        sessionObject = std::make_shared<HttpSession>(m_logger, sessionId);
+        sessionObject = std::make_shared<HttpSession>(m_logger, sessionId, hostUrl);
         m_SessionInfo.insert(std::pair<std::string, S_PTR_HTTP_SESSION>(sessionId, sessionObject));
     }
-    sessionObject->processHTTPMessage(httpParams);
+    return sessionObject->processHTTPMessage(httpParams);
 }

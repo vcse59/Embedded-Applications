@@ -37,7 +37,7 @@ HttpParams::~HttpParams()
 
 }
 
-std::string HttpParams::generateHttpResponse() {
+std::string HttpParams::generateLogin() {
     
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
@@ -57,6 +57,45 @@ std::string HttpParams::generateHttpResponse() {
     return response.str();
 }
 
+std::string HttpParams::generateHomePage() {
+    
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
+
+    // Read index.html content
+    std::string index_html_content = httpUtility->readIndexHtml("webFiles/HomePage.html");    
+    std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+
+    std::stringstream response;
+    response << "HTTP/1.1 200 OK\r\n";
+    response << "Content-Security-Policy: default-src 'self'\r\n";
+    response << "Content-Type: text/html\r\n";
+    response << "Set-Cookie: " << sessiondId << "\r\n"; // Embed session ID in cookie
+    response << "Content-Length: " << index_html_content.size() << "\r\n\r\n";
+    response << index_html_content;
+
+    std::cout << "RESPONSE : " << response.str() << std::endl;
+    return response.str();
+}
+
+std::string HttpParams::generateRedirect(std::string& hostURL, std::string newURL)
+{
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
+
+    std::cout << "*********HOST URL : " << hostURL << std::endl;
+    // Read index.html content
+    std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+
+    std::stringstream response;
+    response << "HTTP/1.1 301 Found\r\n";
+    response << "Location: " << hostURL << newURL << "\r\n\r\n";
+    response << "Content-Security-Policy: default-src 'self'\r\n";
+    response << "Set-Cookie: " << sessiondId << "\r\n"; // Embed session ID in cookie
+
+    std::cout << "REDIRECT - RESPONSE : " << response.str() << std::endl;
+    return response.str();
+}
 
 void HttpParams::parse()
 {
@@ -102,6 +141,12 @@ void HttpParams::parse()
         {
             std::string headerFieldName = line.substr(0, pos);
             std::string headerFieldValue = line.substr(pos + 1, line.length() - pos);
+
+            headerFieldName.erase(0, headerFieldName.find_first_not_of(" \t\n\r"));
+            headerFieldName.erase(headerFieldName.find_last_not_of(" \t\n\r") + 1); 
+            headerFieldValue.erase(0, headerFieldValue.find_first_not_of(" \t\n\r"));
+            headerFieldValue.erase(headerFieldValue.find_last_not_of(" \t\n\r") + 1); 
+
             auto it = HEADER_STRING.find(headerFieldName);
             if (it != HEADER_STRING.end())
             {
@@ -113,4 +158,16 @@ void HttpParams::parse()
     // Generate Cookie if it's not there in request
     generateCookieIfRequired();
 
+}
+
+std::string HttpParams::generateFavicon()
+{
+    std::stringstream response;
+    std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+
+    response << "HTTP/1.1 200 OK\r\n";
+    response << "Connection: close\r\n"; // Add a newline after Connection header
+    response << "\r\n"; // Add an empty line to separate headers from body
+    
+    return response.str();
 }

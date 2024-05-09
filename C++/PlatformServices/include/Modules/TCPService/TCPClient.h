@@ -28,7 +28,7 @@ namespace NetworkClass
             TCPClient(LOGGER_SERVICE::S_PTR_LOGGER logger, std::string serverAddress, unsigned int portNumber);
             ~TCPClient();
 
-            COMMON_DEFINITIONS::eSTATUS createServer() override;
+            COMMON_DEFINITIONS::eSTATUS createServer(enum NetworkClass::eLISTENING_MODE mode = NetworkClass::eLISTENING_MODE::DEFAULT_MODE) override;
             COMMON_DEFINITIONS::eSTATUS connectToServer() override;
             COMMON_DEFINITIONS::eSTATUS sendMessage(int socket, const std::string& message) override;
             COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) override;

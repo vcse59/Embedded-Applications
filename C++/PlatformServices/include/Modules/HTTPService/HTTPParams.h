@@ -37,7 +37,10 @@ namespace HTTP_SERVICE
             }
 
             void parse();
-            std::string generateHttpResponse();
+            std::string generateLogin();
+            std::string generateRedirect(std::string& hostURL, std::string newURL);
+            std::string generateHomePage();
+            std::string generateFavicon();
 
             void removeSpaces(std::string& str)
             {

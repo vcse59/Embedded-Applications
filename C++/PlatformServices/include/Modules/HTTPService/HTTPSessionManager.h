@@ -20,7 +20,7 @@ namespace HTTP_SERVICE
             COMMON_DEFINITIONS::eHTTP_SESSION_STATUS addSession(std::string sessionId);
             COMMON_DEFINITIONS::eHTTP_SESSION_STATUS removeSession(std::string sessionId);
             COMMON_DEFINITIONS::eHTTP_SESSION_STATUS isValidSession(std::string sessionId);
-            void processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams);
+            std::string processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams);
             
         private:
 
