@@ -8,6 +8,13 @@ using namespace std;
 
 MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger)
 {
+    m_DbName            = "Test1";
+    m_RemotePort        = 3306;
+    m_SqlRemoteIP       = "127.0.0.1";
+    m_TableName         = "sampleTable";
+    m_DbUserName        = "test";
+    m_DbUserPassword    = "Test@143";
+    m_AccessTokenTable  = "AccessTokenTable";
 }
 
 MySQLConnector::~MySQLConnector()
@@ -25,13 +32,77 @@ MySQLConnector::~MySQLConnector()
     m_DBconnection = nullptr;
 }
 
+COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
+{
+    COMMON_DEFINITIONS::eSTATUS status = connectToDBService();
+
+    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS){
+        LOGGER(m_logger) << "Connected to MySQL" << std::endl;
+    }
+    else{
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Not connected" << std::endl;
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
+    }
+
+    status = createDataBase(m_DbName);
+
+    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+    {
+        LOGGER(m_logger) << "DB Created Successfully" << std::endl;
+    }
+    else
+    {
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "DB Creation failed" << std::endl;
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
+    }
+
+    
+    // Define table name
+    std::string tableName = m_TableName;
+
+    // Create table
+    string createTableQuery = "CREATE TABLE " + tableName +" ("
+                                "id INT AUTO_INCREMENT PRIMARY KEY,"
+                                "SESSIONID VARCHAR(50),"
+                                "HTTPMETHOD VARCHAR(10),"
+                                "RESOURCEURL    LONGTEXT,"
+                                "DATARAW LONGTEXT,"
+                                "HTTPERROR LONGTEXT"
+                              ")";
+
+    status = executeQuery(tableName, createTableQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_DEFINITION);
+    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+    {
+        LOGGER(m_logger) << "Table created successfully" << std::endl;
+    }
+    else{
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Unable to create table" << std::endl;
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
+    }
+
+    status = CreateAccessToKenTable();
+    if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+    {
+        LOGGER(*m_logger) << "Fail to create access token table";
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
+    }
+
+    return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+}
+
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::connectToDBService()
 {
     try
     {
         /* Create a connection */
         m_DBdriver = get_driver_instance();
-        m_DBconnection = m_DBdriver->connect("tcp://192.168.6.26:3306", "test", "Test@143");
+        std::string remoteURL;
+        remoteURL.append("tcp://");
+        remoteURL.append(m_SqlRemoteIP);
+        remoteURL.append(":");
+        remoteURL.append(std::to_string(m_RemotePort));
+
+        m_DBconnection = m_DBdriver->connect(remoteURL, m_DbUserName, m_DbUserPassword);
     }
     catch(sql::SQLException& e)
     {
@@ -81,8 +152,35 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::createDataBase(std::string dbName)
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
-COMMON_DEFINITIONS::eSTATUS MySQLConnector::createTable(std::string tableName)
+COMMON_DEFINITIONS::eSTATUS MySQLConnector::CreateAccessToKenTable()
 {
+    COMMON_DEFINITIONS::eSTATUS status = COMMON_DEFINITIONS::eSTATUS::UNKNOWN;
+    // Define table name
+    std::string tableName = m_AccessTokenTable;
+
+    // Check if table already exists
+    if (isTableExists(tableName) == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+    {
+        LOGGER(m_logger) << tableName << " already exists in DB : " << m_DbName << std::endl;
+        return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+    }
+
+    // Create table
+    string createTableQuery = "CREATE TABLE " + tableName +" ("
+                                "id INT AUTO_INCREMENT PRIMARY KEY,"
+                                "AccessTokenID VARCHAR(50)"
+                              ")";
+
+    status = executeQuery(tableName, createTableQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_DEFINITION);
+    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+    {
+        LOGGER(m_logger) << "Table " << tableName << " created successfully" << std::endl;
+    }
+    else{
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Unable to create table " << tableName << std::endl;
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
+    }
+
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
@@ -128,7 +226,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::executeQuery(std::string tableName,
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDDLQuery(std::string queryString)
 {
-    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << queryString << std::endl;
+    LOGGER(m_logger) << queryString << std::endl;
     sql::Statement* createStatement = m_DBconnection->createStatement();
     try
     {
@@ -159,17 +257,8 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDMLQuery(std::string queryStr
     sql::Statement* createStatement = m_DBconnection->createStatement();
     try
     {
-        (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Query string : " << queryString << std::endl;
         createStatement->execute("USE " + m_DbName);
-
-        int affectedRows = createStatement->executeUpdate(queryString);
-
-        if (affectedRows > 0) {
-            cout << "Rows inserted: " << affectedRows << endl;
-        } else {
-            cout << "Error inserting rows." << endl;
-        }
-
+        createStatement->executeUpdate(queryString);
     }
     catch (sql::SQLException &e)
     {
@@ -298,7 +387,46 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::isTableExists(std::string tableName)
     }
 
     if (resultSet != nullptr)
+        delete resultSet;
+    delete createStatement;        
+    return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+}
+
+COMMON_DEFINITIONS::eSTATUS MySQLConnector::loadAccessToken(std::unordered_set<std::string>& accessToken)
+{
+    std::string fetchQuery = "SELECT AccessTokenID from " + m_AccessTokenTable;
+
+    // Clear the exisiting access Token
+    accessToken.clear();
+
+    sql::Statement* createStatement = m_DBconnection->createStatement();
+    sql::ResultSet* resultSet = nullptr;
+    try
+    {    
+        // Execute the SQL query to check if the database exists
+        resultSet = createStatement->executeQuery(fetchQuery);
+
+        // Population the access token info to unordered_set
+        while (resultSet->next())
+        {
+            accessToken.insert("Bearer " + resultSet->getString("AccessTokenID"));
+        }
+    }
+    catch (sql::SQLException &e)
+    {
+        cout << "# ERR: SQLException in " << __FILE__;
+        cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+        cout << "# ERR: " << e.what();
+        cout << " (MySQL error code: " << e.getErrorCode();
+        cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+        if (resultSet != nullptr)
             delete resultSet;
         delete createStatement;        
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
+    }
+
+    if (resultSet != nullptr)
+        delete resultSet;
+    delete createStatement;        
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }

@@ -37,7 +37,7 @@ namespace HTTP_SERVICE{
         APPLICATION_MIME    = 3
     };
 
-        enum eHEADER_FIELD{
+    enum eHEADER_FIELD{
         HEADER_ACCEPT                       = 0,
         HEADER_ACCEPT_ENCODING              = 1,
         HEADER_ACCEPT_LANGUAGE              = 2,
@@ -52,7 +52,9 @@ namespace HTTP_SERVICE{
         HEADER_X_FORWARDED_PROTO            = 11,
         HEADER_REFERER                      = 12,
         HEADER_METHOD                       = 13,
-        HEADER_RESOURCE_URL                 = 14
+        HEADER_RESOURCE_URL                 = 14,
+        HEADER_HTTP_ERROR                   = 15,
+        HEADER_AUTHORIZATION                = 16
     };
 
     static std::unordered_map<std::string, eHEADER_FIELD> HEADER_STRING  = { 
@@ -67,8 +69,39 @@ namespace HTTP_SERVICE{
         {"User-Agent", eHEADER_FIELD::HEADER_USER_AGENT},
         {"X-Real-IP", eHEADER_FIELD::HEADER_X_REAL_IP},
         {"X-Forwarded-For", eHEADER_FIELD::HEADER_X_FORWARDED_FOR},
-        {"X-Forwarded-Proto", eHEADER_FIELD::HEADER_X_FORWARDED_PROTO}
+        {"X-Forwarded-Proto", eHEADER_FIELD::HEADER_X_FORWARDED_PROTO},
+        {"Authorization", eHEADER_FIELD::HEADER_AUTHORIZATION}
+        };
+
+    enum eHTTP_ERROR
+    {
+        INVALID_HTTP_METHOD     = 0,
+        INVALID_RESOURCE_URL    = 1,
+        INVALID_HOST            = 2,
+        INVALID_UNKNOWN         = 3,
+        NO_ERROR                = 4
+    };
+
+    static std::unordered_map<HTTP_SERVICE::eHTTP_ERROR, std::string> HTTP_ERROR= {
+        {HTTP_SERVICE::eHTTP_ERROR::INVALID_HOST, "Invalid Host in Header....Redirect to login page"},                                                                        
+        {HTTP_SERVICE::eHTTP_ERROR::INVALID_HTTP_METHOD, "Invalid HTTP Method in Header....Redirect to login page"},                                                                        
+        {HTTP_SERVICE::eHTTP_ERROR::INVALID_RESOURCE_URL, "Invalid Resource path in Header....Redirect to login page"},                                                                        
+        {HTTP_SERVICE::eHTTP_ERROR::INVALID_UNKNOWN, "Unknown Request....Redirect to login page"},
+        {HTTP_SERVICE::eHTTP_ERROR::NO_ERROR, "No Error Found"}                                                                        
         };
 };
+
+#define HTML_PAGE(TITLE, BODY)    \
+    "<!DOCTYPE html>" \
+    "<html lang=\"en\">"  \
+        "<head>"  \
+        "<title>" \
+             TITLE     \
+        "</title>"    \
+        "</head>"   \
+        "<body>"    \
+        + BODY +    \
+        "</body>"   \
+    "</html>"
 
 #endif

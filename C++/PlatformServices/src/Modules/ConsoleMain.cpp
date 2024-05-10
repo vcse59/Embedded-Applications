@@ -11,7 +11,14 @@ using namespace NetworkClass;
 std::shared_ptr<FRAMEWORK::ConsoleAppInterface> FRAMEWORK::ConsoleMain::m_Interface;
 
 ConsoleMain::~ConsoleMain(){
-    }
+    if (m_linkedList != nullptr)
+        delete m_linkedList;
+    m_linkedList = nullptr;
+
+    if (m_queueInterface != nullptr)
+        delete m_queueInterface;
+    m_queueInterface = nullptr;
+}
 
 NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPServer()
 {
@@ -90,7 +97,7 @@ LOGGER_SERVICE::S_PTR_LOGGER& ConsoleMain::getLogger()
 {
     if (m_Logger == nullptr)
     {
-        m_Logger = std::make_shared<LOGGER_SERVICE::Logger>();
+        m_Logger = std::make_shared<LOGGER_SERVICE::Logger>(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG);
     }
     return m_Logger;
 }

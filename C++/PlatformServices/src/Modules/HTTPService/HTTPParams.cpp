@@ -63,7 +63,15 @@ std::string HttpParams::generateHomePage() {
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
     // Read index.html content
-    std::string index_html_content = httpUtility->readIndexHtml("webFiles/HomePage.html");    
+    std::string body = "<div class=\"container\">   \
+        <h2>About Me</h2>   \
+        <p>I'm a passionate developer who likes to explore new tech</p> \
+        </div>";
+    std::string index_html_content = HTML_PAGE("Welcome", body);// = httpUtility->readIndexHtml("webFiles/HomePage.html");    
+    //std::cout << "CONTENT : " << index_html_content << std::endl;
+
+
+    //std::string index_html_content = httpUtility->readIndexHtml("webFiles/HomePage.html");    
     std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
 
     std::stringstream response;
@@ -74,7 +82,7 @@ std::string HttpParams::generateHomePage() {
     response << "Content-Length: " << index_html_content.size() << "\r\n\r\n";
     response << index_html_content;
 
-    std::cout << "RESPONSE : " << response.str() << std::endl;
+    //std::cout << "RESPONSE : " << response.str() << std::endl;
     return response.str();
 }
 
@@ -83,7 +91,6 @@ std::string HttpParams::generateRedirect(std::string& hostURL, std::string newUR
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
-    std::cout << "*********HOST URL : " << hostURL << std::endl;
     // Read index.html content
     std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
 
@@ -92,8 +99,6 @@ std::string HttpParams::generateRedirect(std::string& hostURL, std::string newUR
     response << "Location: " << hostURL << newURL << "\r\n\r\n";
     response << "Content-Security-Policy: default-src 'self'\r\n";
     response << "Set-Cookie: " << sessiondId << "\r\n"; // Embed session ID in cookie
-
-    std::cout << "REDIRECT - RESPONSE : " << response.str() << std::endl;
     return response.str();
 }
 
@@ -108,7 +113,6 @@ void HttpParams::parse()
         // Remove leading and trailing whitespaces from header value
         line.erase(0, line.find_first_not_of(" \t"));
         line.erase(line.find_last_not_of(" \t") + 1);   
-        (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "DATA : " << line << std::endl;
 
         // parse method and resouce url
         if (line.find(httpString) != std::string::npos){
@@ -116,7 +120,6 @@ void HttpParams::parse()
             for (auto it = HTTP_METHOD.begin(); it != HTTP_METHOD.end(); it++, index++){
                 if (line.find(it->first) != std::string::npos)
                 {
-                    m_Method = it->second;
                     m_HeaderInfo.insert(std::pair<HTTP_SERVICE::eHEADER_FIELD, std::string>(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD, it->first));
 
                     // parse the resouce url
@@ -130,6 +133,23 @@ void HttpParams::parse()
                     removeSpaces(parsedString);
                     if (parsedString.length() > 0)
                         m_HeaderInfo.insert(std::pair<HTTP_SERVICE::eHEADER_FIELD, std::string>(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL, parsedString));
+                }
+            }
+
+            // Handle invalid method and redirect to login page
+            auto headerIter = m_HeaderInfo.find(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD);
+            if (headerIter == m_HeaderInfo.end())
+            {
+                m_HttpError = HTTP_SERVICE::eHTTP_ERROR::INVALID_HTTP_METHOD;
+                LOGGER(m_logger) << "Incorrect HTTP Method detected...Falling back to login page with GET Method" << std::endl;
+                m_HeaderInfo.insert(std::pair<HTTP_SERVICE::eHEADER_FIELD, std::string>(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD, "GET"));
+                headerIter = m_HeaderInfo.find(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL);
+                std::string defaultResourceURL = "/login";
+                if (headerIter != m_HeaderInfo.end())
+                {
+                    headerIter->second = defaultResourceURL;
+                }else{
+                    m_HeaderInfo.insert(std::pair<HTTP_SERVICE::eHEADER_FIELD, std::string>(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL, defaultResourceURL));
                 }
             }
             continue;
@@ -168,6 +188,21 @@ std::string HttpParams::generateFavicon()
     response << "HTTP/1.1 200 OK\r\n";
     response << "Connection: close\r\n"; // Add a newline after Connection header
     response << "\r\n"; // Add an empty line to separate headers from body
+    
+    return response.str();
+}
+
+std::string HttpParams::generateErrorResponse(std::string errorMessage)
+{
+    std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+
+    std::stringstream response;
+    response << "HTTP/1.1 401 UnAuthorized OK\r\n";
+    response << "Content-Security-Policy: default-src 'self'\r\n";
+    response << "Content-Type: text/html\r\n";
+    response << "Set-Cookie: " << sessiondId << "\r\n"; // Embed session ID in cookie
+    response << "Content-Length: " << errorMessage.size() << "\r\n\r\n";
+    response << errorMessage << "\r\n";
     
     return response.str();
 }

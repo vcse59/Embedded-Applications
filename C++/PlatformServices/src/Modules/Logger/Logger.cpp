@@ -64,6 +64,15 @@ std::ostream& Logger::operator<<(std::string pLogMessageStream)
     return lOStream;
 }
 
+std::ostream& Logger::operator<<(eLOG_LEVEL_ENUM pLogLevel)
+{
+    std::string lLogLevelStr = mLogLevel.getLogLevelString(pLogLevel);
+    lMutex.lock();
+    std::ostream& lOStream = std::cout << this->getCurrentDateTime() << " " << lLogLevelStr << " ";
+    lMutex.unlock();
+    return lOStream;
+}
+
 Logger& Logger::operator()(eLOG_LEVEL_ENUM pLogLevel)
 {
     std::lock_guard<std::mutex> lock(lMutex);

@@ -93,7 +93,7 @@ void TCPClient::exchangeMessages()
     // Construct HTTP request with JSON data
     char http_request[MAX_BUFFER_SIZE];
     snprintf(http_request, MAX_BUFFER_SIZE,
-             "POST /api HTTP/1.1\r\n"
+             "POST / HTTP/1.1\r\n"
              "Host: %s\r\n"
              "Content-Type: application/json\r\n"
              "Set-Cookie: sessionID=%s; HttpOnly; Secure\r\n" // Embed session ID in cookie

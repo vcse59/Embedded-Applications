@@ -77,6 +77,7 @@ namespace FRAMEWORK
             ConsoleAppInterface(const ConsoleAppInterface&&) = delete;
             ConsoleAppInterface& operator=(const ConsoleAppInterface&&) = delete;
     };
+
     typedef std::shared_ptr<FRAMEWORK::ConsoleAppInterface> S_PTR_CONSOLEAPPINTERFACE;
 }
 

@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <mutex>
+#include <unordered_set>
 
 /*
    Include directly the different
@@ -31,15 +32,17 @@ namespace DATABASE_SERVICE
             MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger);
             ~MySQLConnector();
 
-            COMMON_DEFINITIONS::eSTATUS connectToDBService() override;
-            COMMON_DEFINITIONS::eSTATUS createDataBase(std::string dbName) override;
-            COMMON_DEFINITIONS::eSTATUS createTable(std::string tableName) override;
+            COMMON_DEFINITIONS::eSTATUS initializeDB() override;
             COMMON_DEFINITIONS::eSTATUS executeQuery(std::string tableName,
                                                     std::string queryString,
                                                     COMMON_DEFINITIONS::eQUERY_TYPE qyeryType) override;
+            COMMON_DEFINITIONS::eSTATUS loadAccessToken(std::unordered_set<std::string>& accessToken) override;
 
         private:
 
+            COMMON_DEFINITIONS::eSTATUS connectToDBService();
+            COMMON_DEFINITIONS::eSTATUS createDataBase(std::string dbName);
+            COMMON_DEFINITIONS::eSTATUS CreateAccessToKenTable();
             COMMON_DEFINITIONS::eSTATUS processDDLQuery(std::string queryString);
             COMMON_DEFINITIONS::eSTATUS processDMLQuery(std::string queryString);
             COMMON_DEFINITIONS::eSTATUS processDQLQuery(std::string queryString);
@@ -50,8 +53,15 @@ namespace DATABASE_SERVICE
             sql::Connection *m_DBconnection = nullptr;
             sql::PreparedStatement *m_PrepStatement = nullptr;
             std::string m_DbName;
+            std::string m_SqlRemoteIP;
+            std::string m_TableName;
+            unsigned int m_RemotePort;
+            std::string m_DbUserName;
+            std::string m_DbUserPassword;
+            std::string m_AccessTokenTable;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             std::mutex  m_Mutex;
+            std::unordered_set<std::string> m_AccessTokenInfo;
 
             MySQLConnector(const MySQLConnector&) = delete;
             MySQLConnector& operator=(const MySQLConnector&) = delete;

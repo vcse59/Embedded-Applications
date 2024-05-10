@@ -25,7 +25,11 @@ TCPServer::TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumbe
 
 TCPServer::~TCPServer()
 {
-	cout << "Close the web server" << endl;
+    if (mServerSocket > 0)
+    {
+        LOGGER(m_logger) << "Closing the web server" << endl;
+    }
+
 	for (unsigned int i = 0; i < MAX_CONNECTIONS; i++)
 	{
 		if (mClientSockets[i] >= 0)
@@ -103,7 +107,7 @@ eSTATUS TCPServer::createServer(enum NetworkClass::eLISTENING_MODE mode)
 
 eSTATUS TCPServer::useSelect()
 {
-    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Use Select Call" << std::endl;
+    LOGGER(m_logger) << "Use Select Call" << std::endl;
 	int addrlen , new_socket , activity;   
 	struct sockaddr_in address;
 
@@ -161,7 +165,7 @@ eSTATUS TCPServer::useSelect()
 
 eSTATUS TCPServer::usePoll()
 {
-    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Use poll Call" << std::endl;
+    LOGGER(m_logger) << "Use poll Call" << std::endl;
 	int addrlen , new_socket , activity;   
 	struct sockaddr_in address;
 
@@ -210,7 +214,7 @@ eSTATUS TCPServer::usePoll()
 
 eSTATUS TCPServer::useEPoll()
 {
-    (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Use epoll Call" << std::endl;
+    LOGGER(m_logger) << "Use epoll Call" << std::endl;
 	int addrlen , new_socket , activity, epoll_fd;
     struct  epoll_event events; 
 	struct sockaddr_in address;

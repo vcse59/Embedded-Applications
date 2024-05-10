@@ -23,6 +23,7 @@ namespace HTTP_SERVICE
                 auto it = m_HeaderInfo.find(method);
                 if (it != m_HeaderInfo.end())
                     paramVal = it->second;
+                    
                 return paramVal;
             }
 
@@ -36,11 +37,17 @@ namespace HTTP_SERVICE
                 return m_HttpRequest;
             }
 
+            std::string getError() const
+            {
+                return HTTP_SERVICE::HTTP_ERROR[m_HttpError];
+            }
+
             void parse();
             std::string generateLogin();
             std::string generateRedirect(std::string& hostURL, std::string newURL);
             std::string generateHomePage();
             std::string generateFavicon();
+            std::string generateErrorResponse(std::string errorMessage);
 
             void removeSpaces(std::string& str)
             {
@@ -49,8 +56,8 @@ namespace HTTP_SERVICE
 
         private:
             std::string m_HttpRequest;
+            HTTP_SERVICE::eHTTP_ERROR m_HttpError = HTTP_SERVICE::eHTTP_ERROR::NO_ERROR;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
-            HTTP_SERVICE::eHTTP_METHODS m_Method = HTTP_SERVICE::eHTTP_METHODS::HTTP_UNKNOWN;
             HTTP_SERVICE::eCONTENT_TYPE m_ContentType = HTTP_SERVICE::eCONTENT_TYPE::APPLICATION_UNKNOWN;
             std::string m_SessonID;
             std::string m_HostIP;

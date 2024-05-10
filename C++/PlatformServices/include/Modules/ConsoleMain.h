@@ -25,6 +25,40 @@ namespace FRAMEWORK
             // Destructor
             ~ConsoleMain();
 
+            // Initialize the application
+            static COMMON_DEFINITIONS::eSTATUS Initialize()
+            {
+    
+                COMMON_DEFINITIONS::eSTATUS status = COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+                std::shared_ptr<FRAMEWORK::ConsoleAppInterface> consoleApp = getConsoleAppInterface();
+                LOGGER_SERVICE::S_PTR_LOGGER logger = consoleApp->getLogger();
+                NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE nwServerIntf = consoleApp->getTCPServer();
+                NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE nwClientIntf = consoleApp->getTCPClient();
+                DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE tableIntf = consoleApp->getDataBaseTable();
+                Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>& queueInterface = consoleApp->getQueue();
+                DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbIntf = consoleApp->getDBInstance();
+                Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode>& singlell = consoleApp->getSingleLinkedList();
+                HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
+                HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER httpSessionManager = consoleApp->getHTTPSessionManager();
+
+                status = dbIntf->initializeDB();
+
+                // Initialize the Database
+                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    LOGGER(logger) << "Initializing DB is failed...Exiting the program" << std::endl;
+                    return status;
+                }
+
+                // Load the Access Token Data
+                if (httpSessionManager->init() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    LOGGER(logger) << "Failed to load access Token Data" << std::endl;
+                    return COMMON_DEFINITIONS::eSTATUS::ERROR;
+                }
+                return status;
+            }
+
             // Returns NetworkClassInterface class singleton instance
             NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPServer() override;
 
@@ -53,7 +87,7 @@ namespace FRAMEWORK
             LOGGER_SERVICE::S_PTR_LOGGER &getLogger() override;
 
             // Returns S_PTR_CONSOLEAPPINTERFACE class singleton instance
-            static S_PTR_CONSOLEAPPINTERFACE getConsoleAppInterface()
+            static std::shared_ptr<FRAMEWORK::ConsoleAppInterface> getConsoleAppInterface()
             {
                 if (m_Interface == NULL)
                 {
@@ -62,7 +96,7 @@ namespace FRAMEWORK
 
                 return m_Interface;
             }
-            static S_PTR_CONSOLEAPPINTERFACE m_Interface;
+            static std::shared_ptr<FRAMEWORK::ConsoleAppInterface> m_Interface;
         
         private:
             ConsoleMain(const ConsoleMain&) = delete;

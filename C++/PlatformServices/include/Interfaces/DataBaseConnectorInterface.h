@@ -2,6 +2,7 @@
 #define __DATABASE_CONNECTOR_H__
 
 #include "CommonClasses/CommonDefinitions.h"
+#include <unordered_set>
 
 namespace DATABASE_SERVICE
 {
@@ -11,12 +12,12 @@ namespace DATABASE_SERVICE
             DataBaseConnectorInterface(){}
             virtual ~DataBaseConnectorInterface() {}
 
-            virtual COMMON_DEFINITIONS::eSTATUS connectToDBService() = 0;
-            virtual COMMON_DEFINITIONS::eSTATUS createDataBase(std::string dbName) = 0;
-            virtual COMMON_DEFINITIONS::eSTATUS createTable(std::string tableName) = 0;
+            virtual COMMON_DEFINITIONS::eSTATUS initializeDB() = 0;
             virtual COMMON_DEFINITIONS::eSTATUS executeQuery(std::string tableName, 
                                                         std::string queryString,
                                                         COMMON_DEFINITIONS::eQUERY_TYPE queryType) = 0;
+            virtual COMMON_DEFINITIONS::eSTATUS loadAccessToken(std::unordered_set<std::string>& accessToken) = 0;
+ 
 
         private:
             DataBaseConnectorInterface(const DataBaseConnectorInterface&) = delete;

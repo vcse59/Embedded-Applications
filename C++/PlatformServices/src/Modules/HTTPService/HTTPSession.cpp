@@ -33,17 +33,12 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     std::string sessionID = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
     std::string resourceURL = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL);
     std::string httpMethod = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD);
-    std::string insertQuery = "INSERT INTO " + tableName + " (SESSIONID, HTTPMETHOD, RESOURCEURL, DATARAW)  \
-        VALUES (\"" +  sessionID + "\" , \"" + httpMethod + "\", \""  + resourceURL + "\", \"" + encodedPayload + "\")";
+    std::string httpError = httpParams.getError();
+    std::string insertQuery = "INSERT INTO " + tableName + " (SESSIONID, HTTPMETHOD, RESOURCEURL, DATARAW, HTTPERROR)  \
+        VALUES (\"" +  sessionID + "\" , \"" + httpMethod + "\", \""  + resourceURL + "\", \"" + encodedPayload +
+        "\", \""  + httpError + "\")";
 
     COMMON_DEFINITIONS::eSTATUS status = dbConnector->executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
-    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
-    {
-        std::cout << "Record created successfully" << std::endl;
-    }
-    else{
-        std::cout << "Unable to insert record" << std::endl;
-    }
 
     std::string response;
     switch(HTTP_METHOD[httpMethod])
@@ -56,7 +51,7 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
             response = processPost(httpParams);
             break;
         default:
-            (*m_logger)(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG) << "Invalid method type" << std::endl;
+            LOGGER(m_logger) << "Invalid method type" << std::endl;
     }
 
     return response;
@@ -64,7 +59,6 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
 
 std::string HttpSession::processGet(HTTP_SERVICE::HttpParams& httpParams)
 {
-    std::cout << "************Processing GET........" << std::endl;
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
     if (httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL) == "/")
@@ -92,7 +86,6 @@ std::string HttpSession::processGet(HTTP_SERVICE::HttpParams& httpParams)
 
 std::string HttpSession::processPost(HTTP_SERVICE::HttpParams& httpParams)
 {
-    std::cout << "************Processing POST........" << std::endl;
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
     if (httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL) == "/login")

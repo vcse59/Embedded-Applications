@@ -16,6 +16,8 @@
 #include "CommonClasses/CommonDefinitions.h"
 #include "Modules/Logger/LogLevel.h"
 
+#define LOGGER(x)   *x
+
 namespace LOGGER_SERVICE
 {
     class Logger
@@ -27,8 +29,23 @@ namespace LOGGER_SERVICE
             std::ostream& operator<<(const char *pLogMessageStream);
             std::ostream& operator<<(std::string pLogMessageStream);
             std::ostream& operator<<(unsigned int pLogMessageStream);
+            std::ostream& operator<<(eLOG_LEVEL_ENUM pLogLevel);
             Logger& operator()(LOGGER_SERVICE::eLOG_LEVEL_ENUM pLogLevel = LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG);
-
+            Logger& operator->()
+            {
+                std::cout << "-> Operator" << std::endl;
+                return *this;
+            }
+            Logger& operator*()
+            {
+                std::cout << "* Operator" << std::endl;
+                return *this;
+            }
+            Logger& operator->*(const Logger&)
+            {
+                std::cout << "->* Operator" << std::endl;
+                return *this;
+            }
         protected:
             LOGGER_SERVICE::eLOG_LEVEL_ENUM  mDefaultLogLevel;
             std::string getCurrentDateTime();

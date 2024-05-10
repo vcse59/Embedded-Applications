@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "CommonClasses/CommonDefinitions.h"
 #include "Modules/HTTPService/HTTPSession.h"
@@ -17,6 +18,7 @@ namespace HTTP_SERVICE
             HttpSessionManager(LOGGER_SERVICE::S_PTR_LOGGER logger);
             ~HttpSessionManager();
 
+            COMMON_DEFINITIONS::eSTATUS init();
             COMMON_DEFINITIONS::eHTTP_SESSION_STATUS addSession(std::string sessionId);
             COMMON_DEFINITIONS::eHTTP_SESSION_STATUS removeSession(std::string sessionId);
             COMMON_DEFINITIONS::eHTTP_SESSION_STATUS isValidSession(std::string sessionId);
@@ -25,6 +27,7 @@ namespace HTTP_SERVICE
         private:
 
             std::unordered_map<std::string, HTTP_SERVICE::S_PTR_HTTP_SESSION> m_SessionInfo;
+            std::unordered_set<std::string> m_AccessTokenInfo;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             HttpSessionManager(const HttpSessionManager&) = delete;
             HttpSessionManager& operator=(const HttpSessionManager&) = delete;
