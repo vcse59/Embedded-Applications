@@ -12,8 +12,8 @@ MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(log
     m_RemotePort        = 3306;
     m_SqlRemoteIP       = "127.0.0.1";
     m_TableName         = "sampleTable";
-    m_DbUserName        = "test";
-    m_DbUserPassword    = "Test@143";
+    m_DbUserName        = "<CONFIGURE_USERNAME>";
+    m_DbUserPassword    = "<CONFIGURE_PASSWORD>";
     m_AccessTokenTable  = "AccessTokenTable";
 }
 
