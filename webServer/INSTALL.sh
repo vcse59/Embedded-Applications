@@ -25,7 +25,7 @@ if [ ! -d "$CMAKE_CLIENT" ]; then
 
 	# Create the directory
 	if [ $? -eq 0 ]; then
-    		echo "Directory '$CMAKE_CLEINT' created successfully."
+    		echo "Directory '$CMAKE_CLIENT' created successfully."
 	fi
 fi
 
