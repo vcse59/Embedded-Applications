@@ -1,3 +1,5 @@
+#include <cstddef>        // std::size_t
+
 #include "Modules/HTTPService/HTTPUtility.h"
 #include "Modules/ConsoleMain.h"
 #include "CommonClasses/CommonDefinitions.h"
@@ -41,6 +43,9 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     COMMON_DEFINITIONS::eSTATUS status = dbConnector->executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
 
     std::string response;
+    LOGGER(m_logger) << "Processing Request : " << httpMethod << std::endl;
+    LOGGER(m_logger) << "Processing Resource URL : " << resourceURL << std::endl;
+
     switch(HTTP_METHOD[httpMethod])
     {
         case HTTP_SERVICE::eHTTP_METHODS::HTTP_GET:
@@ -61,27 +66,32 @@ std::string HttpSession::processGet(HTTP_SERVICE::HttpParams& httpParams)
 {
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
-    if (httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL) == "/")
+    std::string resourceURL = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL);
+    std::string response;
+    if (resourceURL == "/")
     {
-        return httpParams.generateRedirect(m_HostURL, "/login");
+        response = httpParams.generateRedirect(m_HostURL, "/login");
     }
-    else if (httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL) == "/login")
+    else if (resourceURL == "/login")
     {
-        return httpParams.generateLogin();
+        response = httpParams.generateLogin();
     }
-    else if (httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL) == "/home")
+    else if (resourceURL == "/home")
     {
-        return httpParams.generateHomePage();
+        response = httpParams.generateHomePage();
     }
-    else if (httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL) == "/favicon.ico")
+    else if (resourceURL == "/favicon.ico")
     {
-        return httpParams.generateFavicon();
+        response = httpParams.generateFavicon();
+    }
+    else if (resourceURL.find(".css") != std::string::npos)
+    {
+        response = httpParams.generateCSSResponse(resourceURL);
     }
     else {
-        return "";
     }
 
-    return "";
+    return response;
 }
 
 std::string HttpSession::processPost(HTTP_SERVICE::HttpParams& httpParams)
@@ -90,13 +100,29 @@ std::string HttpSession::processPost(HTTP_SERVICE::HttpParams& httpParams)
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
     if (httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL) == "/login")
     {
-        return httpParams.generateRedirect(m_HostURL, "/home");
+        if (processLogin(httpParams) == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+            return httpParams.generateHomePage();
     }
 
-    return "";
+    return httpParams.generateLogin("<span>Invalid credential</span>");
 }
 
-std::string HttpSession::processLogin(HTTP_SERVICE::HttpParams& httpParams)
+COMMON_DEFINITIONS::eSTATUS HttpSession::processLogin(HTTP_SERVICE::HttpParams& httpParams)
 {
-    return "";
+    std::string requestBody = httpParams.getHttpRequestBody();
+
+    std::string username;
+    std::string password;
+
+    std::size_t pos = requestBody.find_first_of('&');
+    std::string usernameString = requestBody.substr(0, pos);
+    std::string passwordString = requestBody.substr(pos, requestBody.length() - pos);
+
+    username = usernameString.substr(usernameString.find_first_of('=') + 1, usernameString.length() - usernameString.find_first_of('='));
+    password = passwordString.substr(passwordString.find_first_of('=') + 1, passwordString.length() - passwordString.find_first_of('='));
+    
+    if (username == "vivek" && password == "vivek")
+        return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+    else
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
 }

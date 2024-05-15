@@ -34,7 +34,7 @@ namespace HTTP_SERVICE
 
             std::string processGet(HTTP_SERVICE::HttpParams& httpParams);
             std::string processPost(HTTP_SERVICE::HttpParams& httpParams);
-            std::string processLogin(HTTP_SERVICE::HttpParams& httpParams);
+            COMMON_DEFINITIONS::eSTATUS processLogin(HTTP_SERVICE::HttpParams& httpParams);
     };
 
     typedef std::shared_ptr<HTTP_SERVICE::HttpSession> S_PTR_HTTP_SESSION;

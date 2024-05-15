@@ -14,7 +14,7 @@ namespace HTTP_SERVICE
     class HttpParams
     {
         public:
-            HttpParams(LOGGER_SERVICE::S_PTR_LOGGER logger, std::string httpResponse);
+            HttpParams(LOGGER_SERVICE::S_PTR_LOGGER logger, std::string httpRequest);
             ~HttpParams();
 
             std::string getParams(HTTP_SERVICE::eHEADER_FIELD method) const
@@ -43,11 +43,16 @@ namespace HTTP_SERVICE
             }
 
             void parse();
-            std::string generateLogin();
+            std::string generateLogin(std::string errorMessage = "");
             std::string generateRedirect(std::string& hostURL, std::string newURL);
             std::string generateHomePage();
             std::string generateFavicon();
             std::string generateErrorResponse(std::string errorMessage);
+            std::string generateCSSResponse(std::string cssFileName);
+            std::string getHttpRequestBody() const
+            {
+                return m_HttpRequestBody;
+            }
 
             void removeSpaces(std::string& str)
             {
@@ -56,6 +61,7 @@ namespace HTTP_SERVICE
 
         private:
             std::string m_HttpRequest;
+            std::string m_HttpRequestBody;
             HTTP_SERVICE::eHTTP_ERROR m_HttpError = HTTP_SERVICE::eHTTP_ERROR::NO_ERROR;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             HTTP_SERVICE::eCONTENT_TYPE m_ContentType = HTTP_SERVICE::eCONTENT_TYPE::APPLICATION_UNKNOWN;

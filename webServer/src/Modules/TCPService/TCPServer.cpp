@@ -247,7 +247,7 @@ eSTATUS TCPServer::useEPoll()
     while(!isServerClosed)
     {
         // Wait for events
-        activity = epoll_wait(epoll_fd, &events, 1, 5);
+        activity = epoll_wait(epoll_fd, &events, 1, 2);
         if (activity == -1)
         {
             printf("epoll wait failed");
