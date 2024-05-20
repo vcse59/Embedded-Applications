@@ -30,17 +30,11 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
     std::string tableName = "sampleTable";
-    DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbConnector = consoleApp->getDBInstance();
     std::string encodedPayload = httpUtility->base64_encode(httpParams.getHTTPRequest());
     std::string sessionID = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
     std::string resourceURL = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL);
     std::string httpMethod = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD);
     std::string httpError = httpParams.getError();
-    std::string insertQuery = "INSERT INTO " + tableName + " (SESSIONID, HTTPMETHOD, RESOURCEURL, DATARAW, HTTPERROR)  \
-        VALUES (\"" +  sessionID + "\" , \"" + httpMethod + "\", \""  + resourceURL + "\", \"" + encodedPayload +
-        "\", \""  + httpError + "\")";
-
-    COMMON_DEFINITIONS::eSTATUS status = dbConnector->executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
 
     std::string response;
     LOGGER(m_logger) << "Processing Request : " << httpMethod << std::endl;
