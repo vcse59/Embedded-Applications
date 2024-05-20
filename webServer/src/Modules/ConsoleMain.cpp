@@ -97,7 +97,7 @@ LOGGER_SERVICE::S_PTR_LOGGER& ConsoleMain::getLogger()
 {
     if (m_Logger == nullptr)
     {
-        m_Logger = std::make_shared<LOGGER_SERVICE::Logger>(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG);
+        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG);
     }
     return m_Logger;
 }

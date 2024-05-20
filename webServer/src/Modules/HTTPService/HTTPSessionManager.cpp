@@ -60,7 +60,6 @@ std::string HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& htt
     
     std::string sessionId = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
     std::string hostUrl = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_HOST);
-    LOGGER_SERVICE::Logger* logger = m_logger.get();
     LOGGER(m_logger) << "Session Id Parsed : " << sessionId << std::endl;
 
     HTTP_SESSION_MAP::iterator it = m_SessionInfo.find(sessionId);
