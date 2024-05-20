@@ -156,8 +156,8 @@ eSTATUS TCPServer::useSelect()
 
         // Handle client request here
         // Spawn a new thread to handle the connection
-            std::thread threadObject(&TCPServer::handle_connection, this, client_socket);
-        threadObject.join();
+        std::thread threadObject(&TCPServer::handle_connection, this, client_socket);
+        threadObject.detach();
         }
     }
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
@@ -206,7 +206,7 @@ eSTATUS TCPServer::usePoll()
         // Handle client request here
         // Spawn a new thread to handle the connection
         std::thread threadObject(&TCPServer::handle_connection, this, new_socket);
-        threadObject.join();
+        threadObject.detach();
         }
     }
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
