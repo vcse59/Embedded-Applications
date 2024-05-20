@@ -110,7 +110,6 @@ std::string HttpParams::generateRedirect(std::string& hostURL, std::string newUR
 
 void HttpParams::parse()
 {
-    m_HttpRequest = removeSpecialCharacters(m_HttpRequest);
     std::stringstream streamString(m_HttpRequest);
     std::string line;
     std::string  httpString = "HTTP/";
@@ -186,7 +185,7 @@ void HttpParams::parse()
             continue;
         }
 
-        m_HttpRequestBody += line;
+        m_HttpRequestBody += removeSpecialCharacters(line);
     }
 
     // Generate Cookie if it's not there in request
