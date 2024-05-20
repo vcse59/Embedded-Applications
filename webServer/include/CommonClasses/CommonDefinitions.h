@@ -40,14 +40,6 @@ namespace COMMON_DEFINITIONS
         NOT_FOUND                       = 6,
         SOCKET_CONNECTION_IN_PROGRESS   = 7
     };
-
-    enum eQUERY_TYPE
-    {
-        UNKNOWN_QUERY       = 0,
-        DATA_QUERY          = 1,
-        DATA_MANIPULATION   = 2,
-        DATA_DEFINITION     = 3
-    };
     
     enum eHTTP_SESSION_STATUS
     {
