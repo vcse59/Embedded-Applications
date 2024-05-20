@@ -25,7 +25,7 @@ namespace NetworkClass
     class TCPClient : public NetworkClass::NetworkClassInterface
     {
         public:
-            TCPClient(LOGGER_SERVICE::S_PTR_LOGGER logger, std::string serverAddress, unsigned int portNumber);
+            TCPClient( std::string serverAddress, unsigned int portNumber);
             ~TCPClient();
 
             COMMON_DEFINITIONS::eSTATUS createServer(enum NetworkClass::eLISTENING_MODE mode = NetworkClass::eLISTENING_MODE::DEFAULT_MODE) override;
@@ -38,7 +38,6 @@ namespace NetworkClass
         private:
             int m_Socketfd = -1;
             std::string m_SessionId;
-            LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             struct sockaddr_in m_ServerAddress;
             std::string m_ServerIPAddress;
             bool m_CloseConnection = {false}; 

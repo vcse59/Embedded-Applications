@@ -27,16 +27,6 @@ NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPServer()
     return m_nwInterface;
 }
 
-NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPClient()
-{
-    if (m_nwInterface == nullptr)
-    {
-        m_nwInterface = std::make_shared<TCPClient>(getLogger(), "127.0.0.1", PORT);
-    }
-
-    return m_nwInterface;
-}
-
 Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode> &ConsoleMain::getQueue()
 {
     if (m_queueInterface == nullptr)

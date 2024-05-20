@@ -104,6 +104,8 @@ std::string HttpSession::processPost(HTTP_SERVICE::HttpParams& httpParams)
 COMMON_DEFINITIONS::eSTATUS HttpSession::processLogin(HTTP_SERVICE::HttpParams& httpParams)
 {
     std::string requestBody = httpParams.getHttpRequestBody();
+    if (requestBody.length() == 0)
+        return COMMON_DEFINITIONS::eSTATUS::ERROR;
 
     std::string username;
     std::string password;

@@ -14,7 +14,6 @@
 // Include header files
 #include "Interfaces/NetworkClassInterface.h"
 #include "Modules/TCPService/TCPServer.h"
-#include "Modules/TCPService/TCPClient.h"
 #include "Modules/HTTPService/HTTPUtility.h"
 #include "Containers/Queue.h"
 #include "Modules/HTTPService/HTTPSessionManager.h"
@@ -33,9 +32,6 @@ namespace FRAMEWORK
 
             // Returns NetworkClassInterface class singleton instance
             virtual NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPServer() = 0;
-
-            // Returns NetworkClassInterface class singleton instance
-            virtual NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPClient() = 0;
 
             // Returns QueueContainer class singleton instance
             virtual Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode> &getQueue() = 0;

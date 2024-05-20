@@ -60,6 +60,18 @@ namespace HTTP_SERVICE
             }
 
         private:
+
+            // Function to remove special characters from a string
+            std::string removeSpecialCharacters(const std::string& input) {
+                std::string output;
+                std::remove_copy_if(input.begin(), input.end(),
+                                    std::back_inserter(output),
+                                    [](char c) {
+                                        // Define what characters to remove
+                                        return !(c >= 32 && c <= 126);
+                                    });
+                return output;
+            }
             std::string m_HttpRequest;
             std::string m_HttpRequestBody;
             HTTP_SERVICE::eHTTP_ERROR m_HttpError = HTTP_SERVICE::eHTTP_ERROR::NO_ERROR;

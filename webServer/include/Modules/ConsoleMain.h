@@ -33,7 +33,6 @@ namespace FRAMEWORK
                 std::shared_ptr<FRAMEWORK::ConsoleAppInterface> consoleApp = getConsoleAppInterface();
                 LOGGER_SERVICE::S_PTR_LOGGER logger = consoleApp->getLogger();
                 NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE nwServerIntf = consoleApp->getTCPServer();
-                NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE nwClientIntf = consoleApp->getTCPClient();
                 Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>& queueInterface = consoleApp->getQueue();
                 Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode>& singlell = consoleApp->getSingleLinkedList();
                 HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
@@ -51,9 +50,6 @@ namespace FRAMEWORK
 
             // Returns NetworkClassInterface class singleton instance
             NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPServer() override;
-
-            // Returns NetworkClassInterface class singleton instance
-            NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPClient() override;
 
             // Returns QueueContainer class singleton instance
             Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>& getQueue() override;

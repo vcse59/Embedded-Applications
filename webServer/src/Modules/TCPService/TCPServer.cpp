@@ -78,7 +78,7 @@ eSTATUS TCPServer::createServer(enum NetworkClass::eLISTENING_MODE mode)
 		perror("bind failed");   
         mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
 	}   
-	printf("Listener on port %d \n", PORT);   
+	LOGGER(m_logger) << "Listener on port " <<  PORT << std::endl;   
 
 	//try to specify maximum of 3 pending connections for the master socket  
 	if (listen(mServerSocket, MAX_CONNECTIONS) < 0)   
@@ -113,7 +113,7 @@ eSTATUS TCPServer::useSelect()
 
     isServerClosed = false;
 	addrlen = sizeof(address);   
-	puts("Waiting for connections ...");   
+	LOGGER(m_logger) << "Waiting for connections ..." << std::endl;   
 
 
     while(!isServerClosed)   
@@ -129,13 +129,13 @@ eSTATUS TCPServer::useSelect()
         FD_SET(mServerSocket, &readfds);
 
         // Set timeout
-        timeout.tv_sec = 5;  // 5 seconds
+        timeout.tv_sec = SERVER_LISTENDER_TIMEOUT_IN_MS;
         timeout.tv_usec = 0;
 
         // Wait for activity on the server socket
         int activity = select(mServerSocket + 1, &readfds, NULL, NULL, &timeout);
         if (activity == -1) {
-            perror("Select error");
+            LOGGER(m_logger) << "Select error" << std::endl;
             mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
             return mStatus;
         } else if (activity == 0) {
@@ -145,14 +145,14 @@ eSTATUS TCPServer::useSelect()
         // Accept incoming connection if available
         if (FD_ISSET(mServerSocket, &readfds)) {
             if ((client_socket = accept(mServerSocket, (struct sockaddr *)&client_addr, &client_addr_len)) < 0) {
-                perror("Accept failed");
+                LOGGER(m_logger) << "Accept failed" << std::endl;
                 continue;
             }
 
 	    char ipString[INET6_ADDRSTRLEN]; // Maximum length for IPv6 address string
             struct sockaddr_in *ipv4 = (struct sockaddr_in *)(&client_addr);
             inet_ntop(AF_INET, &(ipv4->sin_addr), ipString, INET_ADDRSTRLEN);
-            printf("New client connected : %d from %s\n", client_socket, ipString);
+            LOGGER(m_logger) << "New client connected : " << client_socket <<  "from " << ipString << std::endl;
 
         // Handle client request here
         // Spawn a new thread to handle the connection
@@ -171,7 +171,7 @@ eSTATUS TCPServer::usePoll()
 
     isServerClosed = false;
 	addrlen = sizeof(address);   
-	puts("Waiting for connections ...");   
+	LOGGER(m_logger) << "Waiting for connections ..." << std::endl;   
 
     struct pollfd fds[MAX_CONNECTIONS + 1]; // Plus 1 for master socket
     memset(fds, 0, sizeof(fds));
@@ -185,10 +185,10 @@ eSTATUS TCPServer::usePoll()
 	    int new_socket;
 
 	    // Call poll() to wait for events
-        activity = poll(fds, MAX_CONNECTIONS + 1, 5);
+        activity = poll(fds, MAX_CONNECTIONS + 1, SERVER_LISTENDER_TIMEOUT_IN_MS);
     
         if (activity == -1) {
-            perror("poll error");
+            LOGGER(m_logger) << "poll error" << std::endl;
             mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
             return mStatus;
         } else if (activity == 0) {
@@ -198,11 +198,10 @@ eSTATUS TCPServer::usePoll()
         // Check for incoming connection on master socket
         if (fds[0].revents & POLLIN) {
             if ((new_socket = accept(mServerSocket, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
-                perror("accept failed");
+                LOGGER(m_logger) << "accept failed" << std::endl;
                 exit(EXIT_FAILURE);
             }
-            printf("New connection, socket fd is %d, IP is : %s, port : %d\n", new_socket, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
-
+        LOGGER(m_logger) << "New client connected : " << new_socket <<  "from IP Address : " << inet_ntoa(address.sin_addr) << " Port : " << ntohs(address.sin_port) << std::endl;
         // Handle client request here
         // Spawn a new thread to handle the connection
         std::thread threadObject(&TCPServer::handle_connection, this, new_socket);
@@ -222,12 +221,12 @@ eSTATUS TCPServer::useEPoll()
     isServerClosed = false;
 	//accept the incoming connection  
 	addrlen = sizeof(address);   
-	puts("Waiting for connections ..."); 
+	LOGGER(m_logger) << "Waiting for connections ..." << std::endl; 
 
     // Create epoll instance
     if ((epoll_fd = epoll_create1(0)) == -1)
     {
-        printf("Fail to create instance of epoll");
+        LOGGER(m_logger) << "Fail to create instance of epoll" << std::endl;
         close(mServerSocket);
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
@@ -239,7 +238,7 @@ eSTATUS TCPServer::useEPoll()
 
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, mServerSocket, &ev) == -1)
     {
-        printf("Fail to add server socket to epoll : %d", errno);
+        LOGGER(m_logger) << "Fail to add server socket to epoll : " << errno << std::endl;
         close(mServerSocket);
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
@@ -247,10 +246,10 @@ eSTATUS TCPServer::useEPoll()
     while(!isServerClosed)
     {
         // Wait for events
-        activity = epoll_wait(epoll_fd, &events, 1, 2);
+        activity = epoll_wait(epoll_fd, &events, 1, SERVER_LISTENDER_TIMEOUT_IN_MS);
         if (activity == -1)
         {
-            printf("epoll wait failed");
+            LOGGER(m_logger) << "epoll wait failed" << std::endl;
             close(mServerSocket);
             return COMMON_DEFINITIONS::eSTATUS::ERROR;
         }else if (activity == 0) {
@@ -263,17 +262,17 @@ eSTATUS TCPServer::useEPoll()
             // Accept new connection
             if ( (new_socket = accept(mServerSocket, (struct sockaddr*)&address, (socklen_t*)&addrlen)) == -1)
             {
-                printf("Accept failed");
+                LOGGER(m_logger) << "Accept failed" << std::endl;
                 close(mServerSocket);
                 return COMMON_DEFINITIONS::eSTATUS::ERROR;
             }
 
-            printf("New connection, socket fd is %d, IP is : %s, port : %d\n", new_socket, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+            LOGGER(m_logger) << "New connection, socket fd is "<< new_socket << ", IP is : " << inet_ntoa(address.sin_addr) << " Port : " << ntohs(address.sin_port) << std::endl;
 
             // Handle client request here
             // Spawn a new thread to handle the connection
             std::thread threadObject(&TCPServer::handle_connection, this, new_socket);
-            threadObject.join();            
+            threadObject.detach();            
         }
     }
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
@@ -309,11 +308,11 @@ eSTATUS TCPServer::sendMessage(int socket, const std::string& message)
         ssize_t sent = send(socket, data, remaining, 0);
         if (sent == -1) {
             // Handle send error
-            std::cerr << "Error sending data\n";
+            LOGGER(m_logger) << "Error sending data\n";
             break;
         } else if (sent == 0) {
             // Connection closed by peer
-            std::cerr << "Connection closed by peer\n";
+            LOGGER(m_logger) << "Connection closed by peer\n";
             break;
         } else {
             // Advance buffer pointer and update remaining data size
@@ -333,12 +332,12 @@ eSTATUS TCPServer::receiveMessage(int socket, std::string& message)
     ssize_t bytes_received = recv(socket, messageBuffer, sizeof(messageBuffer), 0);
     if (bytes_received < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            std::cerr << "Receive timeout" << std::endl;
+            LOGGER(m_logger) << "Receive timeout" << std::endl;
         } else {
-            std::cerr << "Receiving error" << std::endl;
+            LOGGER(m_logger) << "Receiving error" << std::endl;
         }
     } else if (bytes_received == 0) {
-        std::cerr << "Connection closed by peer" << std::endl;
+        LOGGER(m_logger) << "Connection closed by peer" << std::endl;
     } else {
         // Process received data
         message += messageBuffer;
@@ -350,7 +349,7 @@ eSTATUS TCPServer::receiveMessage(int socket, std::string& message)
 
 eSTATUS TCPServer::closeSocket()
 {
-    cout << "Shutting down the web server" << endl;
+    LOGGER(m_logger) << "Shutting down the web server" << endl;
     isServerClosed = true;
     return eSTATUS::SUCCESS;
 }

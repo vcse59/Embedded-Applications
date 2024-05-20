@@ -110,6 +110,7 @@ std::string HttpParams::generateRedirect(std::string& hostURL, std::string newUR
 
 void HttpParams::parse()
 {
+    m_HttpRequest = removeSpecialCharacters(m_HttpRequest);
     std::stringstream streamString(m_HttpRequest);
     std::string line;
     std::string  httpString = "HTTP/";

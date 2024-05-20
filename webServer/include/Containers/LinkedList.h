@@ -304,7 +304,6 @@ void Storage::SingleLinkedList<T>::printLinkedList()
 template <class T>
 COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::clear()
 {
-    cout << "Clearing the linked list" << endl;
     T *tempNode = mHeadNode;
     T *temp = NULL;
 

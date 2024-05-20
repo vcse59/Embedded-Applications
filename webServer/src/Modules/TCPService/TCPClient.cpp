@@ -1,19 +1,13 @@
 #include <sstream>
 
-#include "Modules/ConsoleMain.h"
 #include "Modules/TCPService/TCPClient.h"
-#include "JsonModule/JSONParser.h"
-#include "JsonModule/JsonItem.h"
 
 using namespace NetworkClass;
 
-TCPClient::TCPClient(LOGGER_SERVICE::S_PTR_LOGGER logger, std::string serverAddress, unsigned int portNumber)
+TCPClient::TCPClient( std::string serverAddress, unsigned int portNumber)
 {
-    m_logger            =   logger;
     m_ServerIPAddress   =   serverAddress;
     mPortNumber         =   portNumber;
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
     m_SessionId = "5344de763fe60e4a4477d0a043efa3ba";
 
     // Create a socket
