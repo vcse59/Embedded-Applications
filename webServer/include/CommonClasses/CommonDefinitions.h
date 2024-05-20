@@ -24,8 +24,7 @@
 #define PORT 9999 
 #define MAX_HEADER_SIZE 2048
 #define MAX_BODY_SIZE   8192
-#define SERVER_LISTENDER_TIMEOUT_IN_MS  2
-
+#define SERVER_LISTENDER_TIMEOUT_IN_MS 2
 
 namespace COMMON_DEFINITIONS
 {
@@ -40,6 +39,14 @@ namespace COMMON_DEFINITIONS
         ERROR                           = 5,
         NOT_FOUND                       = 6,
         SOCKET_CONNECTION_IN_PROGRESS   = 7
+    };
+
+    enum eQUERY_TYPE
+    {
+        UNKNOWN_QUERY       = 0,
+        DATA_QUERY          = 1,
+        DATA_MANIPULATION   = 2,
+        DATA_DEFINITION     = 3
     };
     
     enum eHTTP_SESSION_STATUS

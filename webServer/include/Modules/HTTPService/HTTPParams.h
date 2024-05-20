@@ -60,7 +60,6 @@ namespace HTTP_SERVICE
             }
 
         private:
-
             // Function to remove special characters from a string
             std::string removeSpecialCharacters(const std::string& input) {
                 std::string output;

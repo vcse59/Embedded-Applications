@@ -25,13 +25,13 @@ ExternalProject_Add(
 ExternalProject_Get_Property(jsoncpp SOURCE_DIR BINARY_DIR)
 
 # Specify include directories 
-target_include_directories(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/include ${CMAKE_BINARY_DIR}/thirdparty/jsoncpp/include)
+target_include_directories(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/../lib/mysql-connector-cpp/include/mysql-cppconn-8/jdbc/cppconn ${CMAKE_SOURCE_DIR}/../lib/mysql-connector-cpp/include/mysql-cppconn-8/jdbc ${CMAKE_BINARY_DIR}/thirdparty/jsoncpp/include)
 
 # Specify directories for linking for a specific target
-target_link_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_BINARY_DIR}/../thirdparty/jsoncpp/lib)
+target_link_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/../lib/mysql-connector-cpp/lib/x86_64-linux-gnu ${CMAKE_BINARY_DIR}/../thirdparty/jsoncpp/lib)
 
 # link against the library
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/lib/libjsoncpp.a PRIVATE resolv ssl crypto)
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/lib/libjsoncpp.a PRIVATE mysqlcppconn-static resolv ssl crypto)
 
 # Make sure my_executable depends on my_library
 add_dependencies(${EXECUTABLE_NAME} jsoncpp)

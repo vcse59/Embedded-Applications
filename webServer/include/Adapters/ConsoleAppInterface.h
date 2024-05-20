@@ -12,8 +12,11 @@
 #define __CONSOLE_APP_INTERFACE_H__
 
 // Include header files
+#include "Interfaces/DataBaseTableInterface.h"
+#include "Interfaces/DataBaseConnectorInterface.h"
 #include "Interfaces/NetworkClassInterface.h"
 #include "Modules/TCPService/TCPServer.h"
+#include "Modules/TCPService/TCPClient.h"
 #include "Modules/HTTPService/HTTPUtility.h"
 #include "Containers/Queue.h"
 #include "Modules/HTTPService/HTTPSessionManager.h"
@@ -33,9 +36,15 @@ namespace FRAMEWORK
             // Returns NetworkClassInterface class singleton instance
             virtual NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPServer() = 0;
 
+            // Returns DataBaseTableInterface class singleton instance
+            virtual DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE getDataBaseTable() = 0;
+
             // Returns QueueContainer class singleton instance
             virtual Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode> &getQueue() = 0;
             
+            // Returns DataBaseConnectorInterface class singleton instance
+            virtual DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE getDBInstance() = 0;
+
             // Returns SingleLinkedList class singleton instance
             virtual Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> &getSingleLinkedList() = 0;
 
@@ -51,7 +60,9 @@ namespace FRAMEWORK
         protected:
 
             NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE m_nwInterface = nullptr;
+            DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE m_dbTableInterface = nullptr;
             Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>* m_queueInterface = nullptr;
+            DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE m_dbConnector = nullptr;
             Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> *m_linkedList = nullptr;
             HTTP_SERVICE::S_PTR_HTTP_UTILITY m_HttpUtility = nullptr;
             HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER m_HttpSesssionManager = nullptr;

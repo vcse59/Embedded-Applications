@@ -13,7 +13,8 @@ HttpSessionManager::~HttpSessionManager(){}
 COMMON_DEFINITIONS::eSTATUS HttpSessionManager::init()
 {
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+    DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbInterface = consoleApp->getDBInstance();
+    return dbInterface->loadAccessToken(m_AccessTokenInfo);
 }
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::addSession(std::string sessionId){

@@ -3,3 +3,9 @@ webServer/build/
 
 # Ignore bin directory
 webServer/bin/
+
+# Ignore lib directory
+webServer/lib/
+
+# Ignore vscode files
+webServer/.vscode/settings.json
