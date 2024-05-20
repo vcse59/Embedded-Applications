@@ -1,10 +1,7 @@
 #include "Modules/ConsoleMain.h"
 #include "CommonClasses/CommonDefinitions.h"
-#include "Modules/DataBaseTable.h"
-#include "Modules/MySQLConnector.h"
 
 using namespace FRAMEWORK;
-using namespace DATABASE_SERVICE;
 using namespace Storage;
 using namespace NetworkClass;
 
@@ -40,15 +37,6 @@ NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPClient()
     return m_nwInterface;
 }
 
-DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE ConsoleMain::getDataBaseTable()
-{
-    if (m_dbTableInterface == nullptr)
-    {
-        m_dbTableInterface = std::make_shared<DataBaseTable>(getLogger());
-    }
-    return m_dbTableInterface;
-}
-
 Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode> &ConsoleMain::getQueue()
 {
     if (m_queueInterface == nullptr)
@@ -56,15 +44,6 @@ Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode> &ConsoleMain::getQueue
         m_queueInterface = new QueueContainer<COMMON_DEFINITIONS::SingleLLNode>(getLogger());
     }
     return *m_queueInterface;
-}
-
-DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE ConsoleMain::getDBInstance()
-{
-    if (m_dbConnector == nullptr)
-    {
-        m_dbConnector = std::make_shared<MySQLConnector>(getLogger());
-    }
-    return m_dbConnector;
 }
 
 Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode>& ConsoleMain::getSingleLinkedList()

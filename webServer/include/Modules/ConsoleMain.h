@@ -34,21 +34,11 @@ namespace FRAMEWORK
                 LOGGER_SERVICE::S_PTR_LOGGER logger = consoleApp->getLogger();
                 NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE nwServerIntf = consoleApp->getTCPServer();
                 NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE nwClientIntf = consoleApp->getTCPClient();
-                DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE tableIntf = consoleApp->getDataBaseTable();
                 Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>& queueInterface = consoleApp->getQueue();
-                DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbIntf = consoleApp->getDBInstance();
                 Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode>& singlell = consoleApp->getSingleLinkedList();
                 HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
                 HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER httpSessionManager = consoleApp->getHTTPSessionManager();
 
-                status = dbIntf->initializeDB();
-
-                // Initialize the Database
-                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
-                {
-                    LOGGER(logger) << "Initializing DB is failed...Exiting the program" << std::endl;
-                    return status;
-                }
 
                 // Load the Access Token Data
                 if (httpSessionManager->init() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
@@ -64,15 +54,9 @@ namespace FRAMEWORK
 
             // Returns NetworkClassInterface class singleton instance
             NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPClient() override;
-            
-            // Returns DataBaseTableInterface class singleton instance
-            DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE getDataBaseTable() override;
 
             // Returns QueueContainer class singleton instance
             Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode>& getQueue() override;
-
-            // Returns DataBaseConnectorInterface class singleton instance
-            DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE getDBInstance() override;
 
             // Returns SingleLinkedList class singleton instance
             Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode> &getSingleLinkedList() override;
