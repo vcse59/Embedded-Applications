@@ -25,6 +25,7 @@ namespace HTTP_SERVICE
         private:
 
             std::string m_SessionId;
+            std::string m_UserId;
             std::string m_HostURL;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             HttpSession(const HttpSession&) = delete;

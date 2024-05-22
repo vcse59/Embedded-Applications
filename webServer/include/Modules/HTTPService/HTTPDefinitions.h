@@ -91,17 +91,4 @@ namespace HTTP_SERVICE{
         };
 };
 
-#define HTML_PAGE(TITLE, BODY)    \
-    "<!DOCTYPE html>" \
-    "<html lang=\"en\">"  \
-        "<head>"  \
-        "<title>" \
-             TITLE     \
-        "</title>"    \
-        "</head>"   \
-        "<body>"    \
-        + BODY +    \
-        "</body>"   \
-    "</html>"
-
 #endif

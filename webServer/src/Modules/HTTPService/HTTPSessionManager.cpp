@@ -58,19 +58,21 @@ std::string HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& htt
         }
     }
     
-    std::string sessionId = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+    std::string cookie  = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
     std::string hostUrl = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_HOST);
-    LOGGER(m_logger) << "Session Id Parsed : " << sessionId << std::endl;
+    LOGGER(m_logger) << "Session Id Parsed : " << cookie << std::endl;
 
-    HTTP_SESSION_MAP::iterator it = m_SessionInfo.find(sessionId);
+    std::string requestID = cookie;
+
+    HTTP_SESSION_MAP::iterator it = m_SessionInfo.find(requestID);
     HTTP_SERVICE::S_PTR_HTTP_SESSION sessionObject = nullptr;
     if (it != m_SessionInfo.end()){
-        LOGGER(m_logger) << "Session found for " << sessionId << std::endl;
+        LOGGER(m_logger) << "Session found for " << requestID << std::endl;
         sessionObject = it->second;
     }else{
-        LOGGER(m_logger) << "Creating new session for " << sessionId << std::endl;
-        sessionObject = std::make_shared<HttpSession>(m_logger, sessionId, hostUrl);
-        m_SessionInfo.insert(std::pair<std::string, S_PTR_HTTP_SESSION>(sessionId, sessionObject));
+        LOGGER(m_logger) << "Creating new session for " << requestID << std::endl;
+        sessionObject = std::make_shared<HttpSession>(m_logger, cookie, hostUrl);
+        m_SessionInfo.insert(std::pair<std::string, S_PTR_HTTP_SESSION>(requestID, sessionObject));
     }
     return sessionObject->processHTTPMessage(httpParams);
 }

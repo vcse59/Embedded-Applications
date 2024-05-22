@@ -42,7 +42,7 @@ namespace DATABASE_SERVICE
 
             COMMON_DEFINITIONS::eSTATUS connectToDBService();
             COMMON_DEFINITIONS::eSTATUS createDataBase(std::string dbName);
-            COMMON_DEFINITIONS::eSTATUS CreateAccessToKenTable();
+            COMMON_DEFINITIONS::eSTATUS createTable(std::string tableName,  std::string createTableQuery);
             COMMON_DEFINITIONS::eSTATUS processDDLQuery(std::string queryString);
             COMMON_DEFINITIONS::eSTATUS processDMLQuery(std::string queryString);
             COMMON_DEFINITIONS::eSTATUS processDQLQuery(std::string queryString);
@@ -55,6 +55,7 @@ namespace DATABASE_SERVICE
             std::string m_DbName;
             std::string m_SqlRemoteIP;
             std::string m_TableName;
+            std::string m_UserTableName;
             unsigned int m_RemotePort;
             std::string m_DbUserName;
             std::string m_DbUserPassword;

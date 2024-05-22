@@ -38,7 +38,8 @@ namespace COMMON_DEFINITIONS
         SUCCESS                         = 4,
         ERROR                           = 5,
         NOT_FOUND                       = 6,
-        SOCKET_CONNECTION_IN_PROGRESS   = 7
+        EXISTS                          = 7,
+        SOCKET_CONNECTION_IN_PROGRESS   = 8
     };
 
     enum eQUERY_TYPE

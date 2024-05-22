@@ -19,16 +19,19 @@ void HttpParams::generateCookieIfRequired()
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
-    std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
-    if (sessiondId.length() == 0)
+    std::string cookieID = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+
+    if (cookieID.length() == 0)
     {
         // Cookie is sent in request
         // Create a new one
-        sessiondId = httpUtility->generateSessionID();
+        cookieID = httpUtility->generateSessionID();
+
+        std::string requestID = cookieID;
 
         // Save the sessionId
         // for future messaging
-        m_HeaderInfo.insert(std::pair<HTTP_SERVICE::eHEADER_FIELD, std::string>(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE, sessiondId));
+        m_HeaderInfo.insert(std::pair<HTTP_SERVICE::eHEADER_FIELD, std::string>(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE, requestID));
     }
 }
 
@@ -69,16 +72,16 @@ std::string HttpParams::generateHomePage() {
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
     // Read index.html content
+    std::string index_html_content = httpUtility->readIndexHtml("webFiles/HTML/home.html");    
+    std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+
+    std::string msgToReplace = "MESSAGE";
     std::string body = "<div class=\"container\">   \
         <h2>About Me</h2>   \
         <p>I'm a passionate developer who likes to explore new tech</p> \
+        <p>Please reach me out at <b>v.cse59@gmail.com</b></p> \
         </div>";
-    std::string index_html_content = HTML_PAGE("Welcome", body);// = httpUtility->readIndexHtml("webFiles/HomePage.html");    
-    //std::cout << "CONTENT : " << index_html_content << std::endl;
-
-
-    //std::string index_html_content = httpUtility->readIndexHtml("webFiles/HomePage.html");    
-    std::string sessiondId = getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+    index_html_content.replace(index_html_content.find(msgToReplace), msgToReplace.length(), body);
 
     std::stringstream response;
     response << "HTTP/1.1 200 OK\r\n";
