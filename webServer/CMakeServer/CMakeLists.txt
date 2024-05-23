@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(ThreadingProject)
 
+file(READ "/etc/issue" ETC_ISSUE)
+string(REGEX MATCH "Ubuntu" DIST ${ETC_ISSUE})
+
 # Include source code include directories
 include_directories(../include)
 
@@ -24,11 +27,22 @@ ExternalProject_Add(
 )
 ExternalProject_Get_Property(jsoncpp SOURCE_DIR BINARY_DIR)
 
-# Specify include directories 
-target_include_directories(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/../lib/mysql-connector-cpp/include/mysql-cppconn-8/jdbc/cppconn ${CMAKE_SOURCE_DIR}/../lib/mysql-connector-cpp/include/mysql-cppconn-8/jdbc ${CMAKE_BINARY_DIR}/thirdparty/jsoncpp/include)
+if(DIST STREQUAL "Ubuntu")
+    # Specify include directories 
+    target_include_directories(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/include
+    ${CMAKE_SOURCE_DIR}/../lib/Ubuntu/mysql-connector-cpp/include/mysql-cppconn-8/jdbc/cppconn
+    ${CMAKE_SOURCE_DIR}/../lib/Ubuntu/mysql-connector-cpp/include/mysql-cppconn-8/jdbc ${CMAKE_BINARY_DIR}/thirdparty/jsoncpp/include)
+else()
+    message(STATUS ">>>> Found unknown distribution <<<<")
+endif()
 
 # Specify directories for linking for a specific target
-target_link_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/../lib/mysql-connector-cpp/lib/x86_64-linux-gnu ${CMAKE_BINARY_DIR}/../thirdparty/jsoncpp/lib)
+if(DIST STREQUAL "Ubuntu")
+  target_link_directories(${EXECUTABLE_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/../lib/Ubuntu/mysql-connector-cpp/lib/x86_64-linux-gnu ${CMAKE_BINARY_DIR}/../thirdparty/jsoncpp/lib)
+else()
+    message(STATUS ">>>> Found unknown distribution <<<<")
+endif()
 
 # link against the library
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/lib/libjsoncpp.a PRIVATE mysqlcppconn-static resolv ssl crypto)

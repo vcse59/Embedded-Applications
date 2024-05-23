@@ -43,6 +43,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
     }
     else{
         LOGGER(m_logger) << "Unable to connect to Mysql server on -> " << m_SqlRemoteIP << " at port -> " << m_RemotePort << std::endl;
+        LOGGER(m_logger) << "Please check the database configuration parameters" << std::endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
