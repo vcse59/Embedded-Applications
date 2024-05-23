@@ -30,8 +30,8 @@ ExternalProject_Get_Property(jsoncpp SOURCE_DIR BINARY_DIR)
 if(DIST STREQUAL "Ubuntu")
     # Specify include directories 
     target_include_directories(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/include
-    ${CMAKE_SOURCE_DIR}/../lib/Ubuntu/mysql-connector-cpp/include/mysql-cppconn-8/jdbc/cppconn
-    ${CMAKE_SOURCE_DIR}/../lib/Ubuntu/mysql-connector-cpp/include/mysql-cppconn-8/jdbc ${CMAKE_BINARY_DIR}/thirdparty/jsoncpp/include)
+    ${CMAKE_SOURCE_DIR}/../lib/mysql-lib/Ubuntu/mysql-connector-cpp/include/mysql-cppconn-8/jdbc/cppconn
+    ${CMAKE_SOURCE_DIR}/../lib/mysql-lib/Ubuntu/mysql-connector-cpp/include/mysql-cppconn-8/jdbc ${CMAKE_BINARY_DIR}/thirdparty/jsoncpp/include)
 else()
     message(STATUS ">>>> Found unknown distribution <<<<")
 endif()
@@ -39,7 +39,7 @@ endif()
 # Specify directories for linking for a specific target
 if(DIST STREQUAL "Ubuntu")
   target_link_directories(${EXECUTABLE_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/../lib/Ubuntu/mysql-connector-cpp/lib/x86_64-linux-gnu ${CMAKE_BINARY_DIR}/../thirdparty/jsoncpp/lib)
+    ${CMAKE_SOURCE_DIR}/../lib/mysql-lib/Ubuntu/mysql-connector-cpp/lib/x86_64-linux-gnu ${CMAKE_BINARY_DIR}/../thirdparty/jsoncpp/lib)
 else()
     message(STATUS ">>>> Found unknown distribution <<<<")
 endif()
