@@ -229,7 +229,7 @@ std::string HttpParams::generateCSSResponse(std::string resourceURL)
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
     
     // Parse the file name
-    string fileName; 
+    std::string fileName; 
     std::size_t pos = resourceURL.find_first_not_of('/');
     if (pos != std::string::npos)
     {

@@ -10,17 +10,17 @@ namespace Storage
     {
         public:
 
-            QueueContainer(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger{logger}{}
+            QueueContainer(){}
             ~QueueContainer(){}
 
-            void enqueue(T* item){mContainer.insertAtEnd(item);}
+            void enqueue(std::shared_ptr<T> item){mContainer.insertAtEnd(item);}
             T dequeue(){return mContainer.popFront();}
             void search(unsigned long pKey) { return mContainer.search(pKey); }
             void remove(unsigned long pKey){}
             void clear(){mContainer.clear();}
+            void print(){mContainer.printLinkedList();}
 
         private:
-            LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             Storage::SingleLinkedList<T> mContainer;
             QueueContainer(const QueueContainer&) = delete;
             QueueContainer& operator=(const QueueContainer&) = delete;

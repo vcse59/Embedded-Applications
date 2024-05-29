@@ -5,19 +5,11 @@
 
 using namespace FRAMEWORK;
 using namespace DATABASE_SERVICE;
-using namespace Storage;
 using namespace NetworkClass;
 
 std::shared_ptr<FRAMEWORK::ConsoleAppInterface> FRAMEWORK::ConsoleMain::m_Interface;
 
 ConsoleMain::~ConsoleMain(){
-    if (m_linkedList != nullptr)
-        delete m_linkedList;
-    m_linkedList = nullptr;
-
-    if (m_queueInterface != nullptr)
-        delete m_queueInterface;
-    m_queueInterface = nullptr;
 }
 
 NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPServer()
@@ -39,15 +31,6 @@ DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE ConsoleMain::getDataBaseTable()
     return m_dbTableInterface;
 }
 
-Storage::QueueContainer<COMMON_DEFINITIONS::SingleLLNode> &ConsoleMain::getQueue()
-{
-    if (m_queueInterface == nullptr)
-    {
-        m_queueInterface = new QueueContainer<COMMON_DEFINITIONS::SingleLLNode>(getLogger());
-    }
-    return *m_queueInterface;
-}
-
 DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE ConsoleMain::getDBInstance()
 {
     if (m_dbConnector == nullptr)
@@ -55,15 +38,6 @@ DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE ConsoleMain::getDBInstance(
         m_dbConnector = std::make_shared<MySQLConnector>(getLogger());
     }
     return m_dbConnector;
-}
-
-Storage::SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode>& ConsoleMain::getSingleLinkedList()
-{
-    if (m_linkedList == nullptr)
-    {
-        m_linkedList = new SingleLinkedList<COMMON_DEFINITIONS::SingleLLNode>(getLogger());
-    }
-    return *m_linkedList;
 }
 
 HTTP_SERVICE::S_PTR_HTTP_UTILITY& ConsoleMain::getHTTPUtility()
