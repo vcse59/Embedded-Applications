@@ -11,6 +11,7 @@
 #include "Modules/ConsoleMain.h"
 #include "JsonModule/JSONParser.h"
 #include "JsonModule/JsonItem.h"
+#include "Containers/Queue.h"
 
 using namespace std;
 using namespace NetworkClass;
