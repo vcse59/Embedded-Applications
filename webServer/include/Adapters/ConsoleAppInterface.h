@@ -20,6 +20,7 @@
 #include "Modules/HTTPService/HTTPUtility.h"
 #include "Modules/HTTPService/HTTPSessionManager.h"
 #include "Modules/Logger/Logger.h"
+#include "Modules/EventMessage/DBEventQueue.h"
 
 namespace FRAMEWORK
 {
@@ -50,6 +51,9 @@ namespace FRAMEWORK
             // Returns Logger class singleton instance
             virtual LOGGER_SERVICE::S_PTR_LOGGER &getLogger() = 0;
 
+            // Returns DB Queue class singleton interface
+            virtual EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getDBQueueInterface() = 0;
+
         protected:
 
             NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE m_nwInterface = nullptr;
@@ -58,6 +62,7 @@ namespace FRAMEWORK
             HTTP_SERVICE::S_PTR_HTTP_UTILITY m_HttpUtility = nullptr;
             HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER m_HttpSesssionManager = nullptr;
             LOGGER_SERVICE::S_PTR_LOGGER m_Logger = nullptr;
+            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_dbQueueInterface = nullptr;
 
         private:
             ConsoleAppInterface(const ConsoleAppInterface&) = delete;

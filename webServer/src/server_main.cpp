@@ -12,6 +12,8 @@
 #include "JsonModule/JSONParser.h"
 #include "JsonModule/JsonItem.h"
 #include "Containers/Queue.h"
+#include "Modules/EventMessage/DBEventQueue.h"
+#include "Modules/EventMessage/DBEventMessage.h"
 
 using namespace std;
 using namespace NetworkClass;
@@ -79,5 +81,4 @@ int main(int argc, char *argv[])
     // Join the thread
     th1.join();
     userThread.join();
-    return 0;
 }

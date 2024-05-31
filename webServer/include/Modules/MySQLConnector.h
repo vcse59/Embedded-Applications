@@ -20,6 +20,7 @@
 #include <cppconn/connection.h>
 #include <cppconn/prepared_statement.h>
 
+#include <thread>
 #include "CommonClasses/CommonDefinitions.h"
 #include "Interfaces/DataBaseConnectorInterface.h"
 #include "Modules/Logger/Logger.h"
@@ -48,6 +49,7 @@ namespace DATABASE_SERVICE
             COMMON_DEFINITIONS::eSTATUS processDQLQuery(std::string queryString);
             COMMON_DEFINITIONS::eSTATUS isDataBaseExists(std::string dbName);
             COMMON_DEFINITIONS::eSTATUS isTableExists(std::string tableName);
+            void processDBEvents();
 
             sql::Driver *m_DBdriver = nullptr;
             sql::Connection *m_DBconnection = nullptr;
@@ -61,8 +63,8 @@ namespace DATABASE_SERVICE
             std::string m_DbUserPassword;
             std::string m_AccessTokenTable;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
-            std::mutex  m_Mutex;
             std::unordered_set<std::string> m_AccessTokenInfo;
+            std::shared_ptr<std::thread> m_DBThread = nullptr;
 
             MySQLConnector(const MySQLConnector&) = delete;
             MySQLConnector& operator=(const MySQLConnector&) = delete;

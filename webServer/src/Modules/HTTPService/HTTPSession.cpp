@@ -44,9 +44,20 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
         VALUES (\"" +  m_UserId + "\" , \"" +  sessionID + "\" , \"" + httpMethod + "\", \""  + resourceURL + "\", \"" + encodedPayload +
         "\", \""  + httpError + "\")";
 
-    COMMON_DEFINITIONS::eSTATUS status = dbConnector->executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
+    EVENT_MESSAGE::DBMessage message;
+    strcpy(message.mQueryString , insertQuery.c_str());
+    strcpy(message.mTableName, tableName.c_str());
+    message.mQueryType = COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION;
 
-    std::string response;
+    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getDBQueueInterface();
+    std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> event = std::make_shared<EVENT_MESSAGE::DBEventMessage>();
+    event->setMessage(reinterpret_cast<char *>(&message), sizeof(message), COMMON_DEFINITIONS::MESSAGE_TYPE::DB_MESSAGE);
+    queueInterface->pushEvent(event);
+    dbConnector->notifyDBThread();
+
+        // COMMON_DEFINITIONS::eSTATUS status = dbConnector->executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
+
+        std::string response;
     LOGGER(m_logger) << "Processing Request : " << httpMethod << std::endl;
     LOGGER(m_logger) << "Processing Resource URL : " << resourceURL << std::endl;
 

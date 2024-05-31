@@ -1,7 +1,10 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include<unistd.h>
+
 #include "Modules/MySQLConnector.h"
+#include "Modules/ConsoleMain.h"
 
 using namespace DATABASE_SERVICE;
 using namespace std;
@@ -10,9 +13,9 @@ MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(log
 {
     m_DbName            = "Test1";
     m_RemotePort        = 3306;
-    m_SqlRemoteIP       = "MYSQL_SERVER_IP";
-    m_DbUserName        = "MYSQL_USERNAME";
-    m_DbUserPassword    = "<MYSQL_PASSWORD>";
+    m_SqlRemoteIP       = "192.168.6.230";
+    m_DbUserName        = "test";
+    m_DbUserPassword    = "Test@143";
     m_TableName         = "UserData";
     m_AccessTokenTable  = "AccessTokenTable";
     m_UserTableName     = "UserTable";
@@ -137,7 +140,32 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
+    m_DBThread = std::make_shared<std::thread>(&MySQLConnector::processDBEvents, this);
+    m_DBThread->detach();
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+}
+
+void MySQLConnector::processDBEvents()
+{
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getDBQueueInterface();
+
+    std::unique_lock<std::mutex> lck(mMutex);
+
+    while (true)
+    {
+        while (!readyToProcess)
+            mNotifyConsumer.wait(lck);
+
+        while (queueInterface->getQueueLength() > 0){
+            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->popEvent();
+            EVENT_MESSAGE::DBMessage* message = (EVENT_MESSAGE::DBMessage*)elem1->getEventData();
+
+            COMMON_DEFINITIONS::eSTATUS status = executeQuery(message->mTableName, message->mQueryString, message->mQueryType);
+            mNotifyProducer.notify_one();
+            readyToProcess = false;
+        }
+    }
 }
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::connectToDBService()
@@ -221,7 +249,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::executeQuery(std::string tableName,
                                                         std::string queryString,
                                                         COMMON_DEFINITIONS::eQUERY_TYPE queryType)
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    //std::lock_guard<std::mutex> lock(m_Mutex);
     COMMON_DEFINITIONS::eSTATUS status = COMMON_DEFINITIONS::eSTATUS::SUCCESS;
     try
     {

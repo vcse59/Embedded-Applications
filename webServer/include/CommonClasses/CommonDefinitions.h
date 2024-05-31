@@ -20,14 +20,23 @@
 
 // Pre-Processor Directive
 #define MAX_CONNECTIONS 64 
-#define MAX_BUFFER_SIZE 1024
+#define DB_TABLE_BUFFER_SIZE 128
+#define DB_QUERY_STRING_SIZE    10 * 1024
+
+#define MAX_BUFFER_SIZE  (DB_QUERY_STRING_SIZE + 1024)
 #define PORT 9999 
 #define MAX_HEADER_SIZE 2048
 #define MAX_BODY_SIZE   8192
-#define SERVER_LISTENDER_TIMEOUT_IN_MS 2
+#define SERVER_LISTENDER_TIMEOUT_IN_MS 1
 
 namespace COMMON_DEFINITIONS
 {
+    enum MESSAGE_TYPE
+    {
+        UNKNOWN_MESSAGE = 0,
+        DB_MESSAGE = 1
+    };
+
     // Status Enumeration
     enum eSTATUS
     {

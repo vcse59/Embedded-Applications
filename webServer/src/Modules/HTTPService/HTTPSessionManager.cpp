@@ -19,18 +19,21 @@ COMMON_DEFINITIONS::eSTATUS HttpSessionManager::init()
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::addSession(std::string sessionId){
 
+    std::lock_guard<std::mutex> lock(mMutex);
     LOGGER(m_logger) << "Entering HttpSessionManager::addSession" << std::endl;
     LOGGER(m_logger) << "Exiting HttpSessionManager::addSession" << std::endl;
     return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_ADDED;
 }
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::removeSession(std::string sessionId){
+    std::lock_guard<std::mutex> lock(mMutex);
     if (m_SessionInfo.find(sessionId) != m_SessionInfo.end())
         m_SessionInfo.erase(sessionId);
     return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_DELETED;
 }
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::isValidSession(std::string sessionId){
+    std::lock_guard<std::mutex> lock(mMutex);
     std::cout << "SESSION : " << sessionId << std::endl;
     if (m_SessionInfo.find(sessionId) == m_SessionInfo.end()){
         return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_EXPIRED;
@@ -40,6 +43,7 @@ COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::isValidSession(std:
 
 std::string HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     std::string bearerToken = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_AUTHORIZATION);
 
     if (bearerToken.length() > 0){

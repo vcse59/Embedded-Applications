@@ -4,6 +4,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
 
 #include "CommonClasses/CommonDefinitions.h"
 #include "Modules/HTTPService/HTTPSession.h"
@@ -25,7 +26,7 @@ namespace HTTP_SERVICE
             std::string processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams);
             
         private:
-
+            std::mutex mMutex;
             std::unordered_map<std::string, HTTP_SERVICE::S_PTR_HTTP_SESSION> m_SessionInfo;
             std::unordered_set<std::string> m_AccessTokenInfo;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;

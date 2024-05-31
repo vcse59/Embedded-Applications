@@ -13,12 +13,13 @@ namespace Storage
             QueueContainer(){}
             ~QueueContainer(){}
 
-            void enqueue(std::shared_ptr<T> item){mContainer.insertAtEnd(item);}
+            void enqueue(T item){mContainer.insertAtEnd(item);}
             T dequeue(){return mContainer.popFront();}
             void search(unsigned long pKey) { return mContainer.search(pKey); }
             void remove(unsigned long pKey){}
             void clear(){mContainer.clear();}
             void print(){mContainer.printLinkedList();}
+            unsigned int getLength(){return mContainer.getLength();}
 
         private:
             Storage::SingleLinkedList<T> mContainer;

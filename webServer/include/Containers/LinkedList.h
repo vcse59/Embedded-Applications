@@ -49,6 +49,7 @@ namespace Storage
         // Copy Constructor
         SingleLLNode(const SingleLLNode &instance)
         {
+            std::lock_guard<std::mutex> lock(mMutex);
             if (mData != NULL)
             {
                 delete[] mData;
@@ -69,6 +70,7 @@ namespace Storage
         // Assignment operator
         SingleLLNode &operator=(const SingleLLNode &instance)
         {
+            std::lock_guard<std::mutex> lock(mMutex);
             if (mData != nullptr)
             {
                 delete[] mData;
@@ -84,7 +86,6 @@ namespace Storage
             mDataLength = instance.getDataLength();
             mData = new char[mDataLength];
             memcpy(mData, instance.getData(), mDataLength);
-
             return *this;
         }
 
@@ -97,11 +98,14 @@ namespace Storage
         // Set data
         void setData(char* data, unsigned int dataLength)
         {
-            if (mData == nullptr)
+            if (mData != nullptr)
             {
-                mData = new char[dataLength];
+                delete[] mData;
+                mData = nullptr;
             }
-            memset(mData, 0, mDataLength);
+
+            mData = new char[dataLength];
+            memset(mData, 0, dataLength);
             mKey = generateKey();
             memcpy(mData, data, dataLength);
             mDataLength = dataLength;
@@ -138,10 +142,13 @@ namespace Storage
         char *mData = nullptr;
         unsigned int mDataLength = {0};
         unsigned long mKey = {0};
+        std::mutex mMutex;
         Storage::SingleLLNode *mNext = NULL;
         SingleLLNode(const SingleLLNode &&) = delete;
         SingleLLNode &operator=(const SingleLLNode &&) = delete;
     };
+
+    typedef std::shared_ptr<Storage::SingleLLNode> S_PTR_SINGLELL_NODE;
 
     template<class T>
     class SingleLinkedList{
@@ -151,9 +158,9 @@ namespace Storage
             SingleLinkedList();
             ~SingleLinkedList();
 
-            COMMON_DEFINITIONS::eSTATUS insertAtEnd(std::shared_ptr<T> item);
-            COMMON_DEFINITIONS::eSTATUS insertAtStart(std::shared_ptr<T> item);
-            COMMON_DEFINITIONS::eSTATUS insertAtNth(unsigned int nthPosition, std::shared_ptr<T> item);
+            COMMON_DEFINITIONS::eSTATUS insertAtEnd(T item);
+            COMMON_DEFINITIONS::eSTATUS insertAtStart(T item);
+            COMMON_DEFINITIONS::eSTATUS insertAtNth(unsigned int nthPosition, T item);
 
             void reverse();
             void deleteFront();
@@ -168,7 +175,10 @@ namespace Storage
 
             COMMON_DEFINITIONS::eSTATUS clear();
             void printLinkedList();
+            unsigned int getLength() const {return mNodeCount;}
         private:
+            unsigned int mNodeCount = 0;
+            std::mutex mMutex;
             T *mHeadNode = nullptr;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger = nullptr;
             SingleLinkedList(const SingleLinkedList&) = delete;
@@ -190,10 +200,11 @@ Storage::SingleLinkedList<T>::~SingleLinkedList()
 }
 
 template <class T>
-COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtEnd(std::shared_ptr<T> item)
+COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtEnd(T item)
 {
-    T* newNode = new T();
-    *newNode = *item;
+    std::lock_guard<std::mutex> lock(mMutex);
+    T *newNode = new T();
+    *newNode = item;
 
     // If head node is empty then assign new node to head node
     if (mHeadNode == NULL)
@@ -211,15 +222,16 @@ COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtEnd(std::share
 
         tempNode->setNext(newNode);
     }
-
+    mNodeCount++;
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
 template <class T>
-COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtStart(std::shared_ptr<T> item)
+COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtStart(T item)
 {
-    T* newNode = new T();
-    *newNode = *item;
+    std::lock_guard<std::mutex> lock(mMutex);
+    T *newNode = new T();
+    *newNode = item;
 
     // If head node is empty then assign new node to head node
     if (mHeadNode == NULL)
@@ -231,15 +243,16 @@ COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtStart(std::sha
         newNode->setNext(mHeadNode);
         mHeadNode = newNode;
     }
-
+    mNodeCount++;
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
 template <class T>
-COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtNth(unsigned int nthPosition, std::shared_ptr<T> item)
+COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtNth(unsigned int nthPosition, T item)
 {
-    T* newNode = new T();
-    *newNode = *item;
+    std::lock_guard<std::mutex> lock(mMutex);
+    T *newNode = new T();
+    *newNode = item;
     unsigned int indexCount = 0;
     T* tempNode = mHeadNode;
     T* prevNode = NULL;
@@ -258,14 +271,20 @@ COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::insertAtNth(unsigned i
         prevNode->setNext(newNode);
     else
         mHeadNode = newNode;
+    mNodeCount++;
+
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
 template <class T>
 void Storage::SingleLinkedList<T>::reverse()
 {
+    std::lock_guard<std::mutex> lock(mMutex);
+
     if (mHeadNode == NULL)
+    {
         return;
+    }
 
     T* tempNode = mHeadNode;
     T* tempHeadNode = nullptr;
@@ -289,8 +308,11 @@ void Storage::SingleLinkedList<T>::reverse()
 template <class T>
 void Storage::SingleLinkedList<T>::deleteFront()
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     if (mHeadNode == NULL)
+    {
         return;
+    }
     T* tempNode = mHeadNode;
     mHeadNode = mHeadNode->getNext();
 
@@ -299,13 +321,17 @@ void Storage::SingleLinkedList<T>::deleteFront()
         delete tempNode;
     }
     tempNode = NULL;
+    mNodeCount--;
 }
 
 template <class T>
 void Storage::SingleLinkedList<T>::deleteBack()
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     if (mHeadNode == NULL)
+    {
         return;
+    }
     T *tempNode = mHeadNode;
     T* prevNode = NULL;
 
@@ -328,11 +354,13 @@ void Storage::SingleLinkedList<T>::deleteBack()
         prevNode->setNext(NULL);
         delete tempNode;
     }
+    mNodeCount--;
 }
 
 template <class T>
 void Storage::SingleLinkedList<T>::deleteNth(unsigned int nthPosition)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     if ((mHeadNode == NULL) || (nthPosition <= 0))
     {
         return;
@@ -361,16 +389,19 @@ void Storage::SingleLinkedList<T>::deleteNth(unsigned int nthPosition)
         prevNode->setNext(tempNode->getNext());
         delete tempNode;
     }
+    mNodeCount--;
 }
 
 template <class T>
 void Storage::SingleLinkedList<T>::deleteByKey(unsigned long pKey)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     T *tempNode = mHeadNode;
     T *prevNode = NULL;
 
-    if (mHeadNode == NULL)
+    if (mHeadNode == NULL){
         return;
+    }
 
     while ((tempNode != NULL) && (pKey != tempNode->getKey()))
     {
@@ -382,31 +413,36 @@ void Storage::SingleLinkedList<T>::deleteByKey(unsigned long pKey)
     {
         prevNode->setNext(tempNode->getNext());
         delete tempNode;
+        mNodeCount--;
     }
 }
 
 template <class T>
 T Storage::SingleLinkedList<T>::popFront()
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     T output;
-    if (mHeadNode == NULL)
+    if (mHeadNode == NULL){
         return output;
+    }
 
     T *tempNode = mHeadNode;
     mHeadNode = mHeadNode->getNext();
     output = *tempNode;
     delete tempNode;
-
+    mNodeCount--;
     return output;
 }
 
 template <class T>
 T Storage::SingleLinkedList<T>::popBack()
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     T output;
 
-    if (mHeadNode == NULL)
+    if (mHeadNode == NULL){
         return output;
+    }
 
     T *tempNode = mHeadNode;
     T *prevNode = mHeadNode;
@@ -428,13 +464,14 @@ T Storage::SingleLinkedList<T>::popBack()
         output = *tempNode;
         delete tempNode;
     }
-
+    mNodeCount--;
     return output;
 }
 
 template <class T>
 T Storage::SingleLinkedList<T>::search(unsigned long pKey)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     T *tempNode = mHeadNode;
 
     while ((tempNode != NULL) && (pKey != tempNode->getKey()))
@@ -442,15 +479,16 @@ T Storage::SingleLinkedList<T>::search(unsigned long pKey)
         tempNode = tempNode->getNext();
     }
 
-    if (tempNode == NULL)
+    if (tempNode == NULL){
         return T();
-
+    }
     return *tempNode;
 }
 
 template <class T>
 void Storage::SingleLinkedList<T>::printLinkedList()
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     T *tempNode = mHeadNode;
 
     if (tempNode == NULL)
@@ -471,6 +509,7 @@ void Storage::SingleLinkedList<T>::printLinkedList()
 template <class T>
 COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::clear()
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     T *tempNode = mHeadNode;
     T *temp = NULL;
 
@@ -483,7 +522,7 @@ COMMON_DEFINITIONS::eSTATUS Storage::SingleLinkedList<T>::clear()
     cout << endl;
 
     mHeadNode = tempNode;
-
+    mNodeCount = 0;
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 

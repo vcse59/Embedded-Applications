@@ -37,6 +37,16 @@ namespace FRAMEWORK
                 DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbIntf = consoleApp->getDBInstance();
                 HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
                 HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER httpSessionManager = consoleApp->getHTTPSessionManager();
+                EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE dbQueueInterface = consoleApp->getDBQueueInterface();
+
+                status = dbQueueInterface->initializeQueue();
+
+                // Initialize the queue for db
+                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    LOGGER(logger) << "Failed to initialize queue" << std::endl;
+                    return status;
+                }
 
                 status = dbIntf->initializeDB();
 
@@ -73,6 +83,10 @@ namespace FRAMEWORK
 
             // Returns HttpSessionManager class singleton instance
             LOGGER_SERVICE::S_PTR_LOGGER &getLogger() override;
+
+            // Returns DB Queue class singleton interface
+            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getDBQueueInterface() override;
+
 
             // Returns S_PTR_CONSOLEAPPINTERFACE class singleton instance
             static std::shared_ptr<FRAMEWORK::ConsoleAppInterface> getConsoleAppInterface()

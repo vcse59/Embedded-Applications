@@ -65,3 +65,13 @@ LOGGER_SERVICE::S_PTR_LOGGER& ConsoleMain::getLogger()
     }
     return m_Logger;
 }
+
+EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE& ConsoleMain::getDBQueueInterface()
+{
+    if (m_dbQueueInterface == nullptr)
+    {
+        m_dbQueueInterface = std::make_shared<EVENT_MESSAGE::DBEventQueue>();
+    }
+
+    return m_dbQueueInterface;
+}
