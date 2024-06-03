@@ -1,5 +1,6 @@
 # Ignore build directory
 webServer/build/
+build/
 
 # Ignore bin directory
 webServer/bin/
@@ -9,3 +10,12 @@ webServer/lib/
 
 # Ignore vscode files
 webServer/.vscode/settings.json
+.vscode/launch.json
+.vscode/settings.json
+.vscode/tasks.json
+ConfigurationManagement/.vscode/launch.json
+ConfigurationManagement/.vscode/tasks.json
+ConfigurationManagement/output/main
+ConfigurationManagement/src/main.d
+ConfigurationManagement/src/main.o
+webServer/.vscode/c_cpp_properties.json
