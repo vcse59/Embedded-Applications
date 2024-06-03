@@ -1,28 +1,16 @@
 #include <sstream>
+#include <thread>
+#include <chrono>
 
 #include "Modules/TCPService/TCPClient.h"
 
 using namespace NetworkClass;
+using namespace std;
 
 TCPClient::TCPClient( std::string serverAddress, unsigned int portNumber)
 {
     m_ServerIPAddress   =   serverAddress;
     mPortNumber         =   portNumber;
-    m_SessionId = "5344de763fe60e4a4477d0a043efa3ba";
-
-    // Create a socket
-    if ((m_Socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-        std::cout <<"Socket creation failed" << std::endl;
-        return;
-    }
-
-    // Initialize server address structure
-    m_ServerAddress.sin_family = AF_INET;
-    m_ServerAddress.sin_port = htons(portNumber);
-    m_ServerAddress.sin_addr.s_addr = inet_addr(serverAddress.c_str());
-
-    m_SocketStatus = COMMON_DEFINITIONS::eSTATUS::SOCKET_CREATED;
 }
 
 TCPClient::~TCPClient()
@@ -35,25 +23,54 @@ COMMON_DEFINITIONS::eSTATUS TCPClient::createServer(enum NetworkClass::eLISTENIN
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
-COMMON_DEFINITIONS::eSTATUS TCPClient::connectToServer()
+void TCPClient::startClient()
 {
-    if (m_SocketStatus == COMMON_DEFINITIONS::eSTATUS::SOCKET_CREATED){
-        // Connect to server
-        if (connect(m_Socketfd, (struct sockaddr *)&m_ServerAddress, sizeof (m_ServerAddress)) == -1)
+    std::shared_ptr<std::thread> th[1];
+    for (int i = 0; i < 1; i++){
+        th[i] = std::make_shared<std::thread>(&TCPClient::run, this);
+    }
+    for (int i = 0; i < 1; i++){
+        th[i]->join();
+    }
+}
+
+void TCPClient::run()
+{
+    for (int i = 0; i < 100; i++){
+        m_SessionId = "5344de763fe60e4a4477d0a043efa3ba";
+
+        // Create a socket
+        if ((m_Socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         {
-            perror("Connect failed");
-            std::cout << "Connection failed" << std::endl;
-            closeSocket();
-            return COMMON_DEFINITIONS::eSTATUS::ERROR;
+            std::cout << "Socket creation failed" << std::endl;
+            return;
         }
 
-        std::cout << "Connection to server : " << m_ServerIPAddress << " at PORT : " << mPortNumber << " is CONNECTED" << std::endl;        
-        exchangeMessages();
-    }else{
-        m_SocketStatus = COMMON_DEFINITIONS::eSTATUS::SOCKET_INITIALIZATION_FAILED;
-    }
+        // Initialize server address structure
+        m_ServerAddress.sin_family = AF_INET;
+        m_ServerAddress.sin_port = htons(mPortNumber);
+        m_ServerAddress.sin_addr.s_addr = inet_addr(m_ServerIPAddress.c_str());
 
-    return m_SocketStatus;
+        m_SocketStatus = COMMON_DEFINITIONS::eSTATUS::SOCKET_CREATED;
+
+        if (m_SocketStatus == COMMON_DEFINITIONS::eSTATUS::SOCKET_CREATED){
+            // Connect to server
+            if (connect(m_Socketfd, (struct sockaddr *)&m_ServerAddress, sizeof (m_ServerAddress)) == -1)
+            {
+                perror("Connect failed");
+                std::cout << "Connection failed" << std::endl;
+                closeSocket();
+                return;
+            }
+
+            std::cout << "Connection to server : " << m_ServerIPAddress << " at PORT : " << mPortNumber << " is CONNECTED" << std::endl;        
+            exchangeMessages();
+        }else{
+            m_SocketStatus = COMMON_DEFINITIONS::eSTATUS::SOCKET_INITIALIZATION_FAILED;
+        }
+
+        //std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
 }
 
 COMMON_DEFINITIONS::eSTATUS TCPClient::sendMessage(int socket, const std::string& message)

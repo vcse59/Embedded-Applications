@@ -295,9 +295,9 @@ void TCPServer::handle_connection(int client_socket) {
     close(client_socket);
 }
 
-COMMON_DEFINITIONS::eSTATUS TCPServer::connectToServer()
+void TCPServer::startClient()
 {
-    return eSTATUS::SUCCESS;
+    return;
 }
 
 eSTATUS TCPServer::sendMessage(int socket, const std::string& message)

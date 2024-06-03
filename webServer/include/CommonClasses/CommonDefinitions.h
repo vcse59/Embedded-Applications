@@ -19,7 +19,7 @@
 #include <memory>
 
 // Pre-Processor Directive
-#define MAX_CONNECTIONS 64 
+#define MAX_CONNECTIONS  1024
 #define DB_TABLE_BUFFER_SIZE 128
 #define DB_QUERY_STRING_SIZE    10 * 1024
 

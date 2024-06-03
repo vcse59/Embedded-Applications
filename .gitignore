@@ -1,5 +1,6 @@
 # Ignore build directory
 webServer/build/
+build/
 
 # Ignore bin directory
 webServer/bin/

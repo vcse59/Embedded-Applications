@@ -29,11 +29,12 @@ namespace NetworkClass
             ~TCPClient();
 
             COMMON_DEFINITIONS::eSTATUS createServer(enum NetworkClass::eLISTENING_MODE mode = NetworkClass::eLISTENING_MODE::DEFAULT_MODE) override;
-            COMMON_DEFINITIONS::eSTATUS connectToServer() override;
+            void startClient() override;
             COMMON_DEFINITIONS::eSTATUS sendMessage(int socket, const std::string& message) override;
             COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) override;
             COMMON_DEFINITIONS::eSTATUS closeSocket() override;
             int getConnectionId() const override;
+            void run();
         
         private:
             int m_Socketfd = -1;
