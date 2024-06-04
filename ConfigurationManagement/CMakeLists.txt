@@ -10,6 +10,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
     GIT_TAG master
 )
+set(JSONCPP_WITH_TESTS OFF)  # Disable building tests for jsoncpp
 FetchContent_MakeAvailable(jsoncpp)
 
 # Add tinyxml2 library
@@ -21,13 +22,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(tinyxml2)
 
 # Specify the source files
-file(GLOB SOURCES CONFIGURE_DEPENDS "src/ConcreteClasses/*.cpp")
+file(GLOB SOURCES CONFIGURE_DEPENDS "src/ConcreteClasses/*")
 
 # Add your main project sources
 add_executable(ConfigurationManagement ${SOURCES} src/main.cpp)
 
 # Include directories for third-party projects
-target_include_directories(ConfigurationManagement PRIVATE include ${jsoncpp_SOURCE_DIR}/include ${tinyxml2_SOURCE_DIR})
+target_include_directories(ConfigurationManagement PRIVATE include ${jsoncpp_SOURCE_DIR}/include ${tinyxml2_SOURCE_DIR}/include)
 
 # Link third-party libraries
 target_link_libraries(ConfigurationManagement PRIVATE jsoncpp_lib tinyxml2)
