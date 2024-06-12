@@ -4,7 +4,6 @@
 #include <unordered_map>
 
 #include "CommonClasses/CommonDefinitions.h"
-#include "JsonModule/JsonItem.h"
 #include "Modules/Logger/Logger.h"
 
 namespace HTTP_SERVICE

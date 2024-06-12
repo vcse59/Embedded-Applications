@@ -10,7 +10,6 @@ namespace EVENT_MESSAGE
         public:
             char mMessage[MAX_BUFFER_SIZE] = {'\0',};
             unsigned int mMessageLen = 0;
-            COMMON_DEFINITIONS::MESSAGE_TYPE mMessageType = COMMON_DEFINITIONS::MESSAGE_TYPE::UNKNOWN_MESSAGE;
     };
 
     class EventMessageInterface
@@ -18,8 +17,6 @@ namespace EVENT_MESSAGE
         public:
             EventMessageInterface() {}
             virtual ~EventMessageInterface() {}
-
-            virtual void setMessage(char* msg, unsigned int msgLen, COMMON_DEFINITIONS::MESSAGE_TYPE messageType) = 0;
             
             void packMessage(){
                 mData.setData(reinterpret_cast<char*> (&eventMsg), sizeof (eventMsg));
@@ -27,10 +24,6 @@ namespace EVENT_MESSAGE
             void unpackMessage(){
                 EventMessage* eventData = reinterpret_cast<EventMessage*>(mData.getData());
                 memcpy(&eventMsg, eventData, sizeof(eventMsg));
-            }
-
-            COMMON_DEFINITIONS::MESSAGE_TYPE getMessageType() const{
-                return eventMsg.mMessageType;
             }
 
             char* getEventData(){
@@ -50,7 +43,13 @@ namespace EVENT_MESSAGE
                 mData = node;
             }
 
-            
+            void setMessage(char *msg, unsigned int msgLen)
+            {
+                memset(eventMsg.mMessage, 0, sizeof(eventMsg.mMessage));
+                memcpy(eventMsg.mMessage, msg, msgLen);
+                eventMsg.mMessageLen = msgLen;
+                packMessage();
+            }
 
         protected:
             EventMessage eventMsg;

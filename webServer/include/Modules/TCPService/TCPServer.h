@@ -17,10 +17,11 @@
 #include <errno.h>  
 #include <arpa/inet.h>    //close  
 #include <string.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
-#include "Interfaces/NetworkClassInterface.h"
-#include "JsonModule/JsonItem.h"
-#include "JsonModule/JSONParser.h"
+#include "Modules/ConsoleMain.h"
 
 namespace NetworkClass
 {
@@ -51,6 +52,11 @@ namespace NetworkClass
             void handle_connection(int client_socket);
 
         private:
+            std::shared_ptr<std::thread> mHttpThread = nullptr;
+            std::mutex mMutex;
+            std::condition_variable mNotifyConsumer;
+            std::condition_variable mNotifyProducer;
+            bool readyToProcess = false;
             TCPServer(const TCPServer&) = delete;
             TCPServer& operator=(const TCPServer&) = delete;
             TCPServer(const TCPServer&&) = delete;
@@ -59,6 +65,7 @@ namespace NetworkClass
             COMMON_DEFINITIONS::eSTATUS useSelect();
             COMMON_DEFINITIONS::eSTATUS usePoll();
             COMMON_DEFINITIONS::eSTATUS useEPoll();
+            void processHTTPMessage();
     };
 }
 

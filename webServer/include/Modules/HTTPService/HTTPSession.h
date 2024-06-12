@@ -1,10 +1,9 @@
 #ifndef __HTTP_SESSION_H__
-#define __HTTP_SESSION_H_
+#define __HTTP_SESSION_H__
 
 #include <chrono>
 
 #include "CommonClasses/CommonDefinitions.h"
-#include "Modules/Logger/Logger.h"
 #include "Modules/HTTPService/HTTPParams.h"
 
 namespace HTTP_SERVICE

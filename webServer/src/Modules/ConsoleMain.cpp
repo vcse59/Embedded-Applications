@@ -1,7 +1,4 @@
 #include "Modules/ConsoleMain.h"
-#include "CommonClasses/CommonDefinitions.h"
-#include "Modules/DataBaseTable.h"
-#include "Modules/MySQLConnector.h"
 
 using namespace FRAMEWORK;
 using namespace DATABASE_SERVICE;
@@ -61,7 +58,7 @@ LOGGER_SERVICE::S_PTR_LOGGER& ConsoleMain::getLogger()
 {
     if (m_Logger == nullptr)
     {
-        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG);
+        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::ConsoleWriter>());
     }
     return m_Logger;
 }
@@ -74,4 +71,24 @@ EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE& ConsoleMain::getDBQueueInterface()
     }
 
     return m_dbQueueInterface;
+}
+
+EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &ConsoleMain::getLoggerQueueInterface()
+{
+    if (m_loggerQueueInterface == nullptr)
+    {
+        m_loggerQueueInterface = std::make_shared<EVENT_MESSAGE::LoggerEventQueue>();
+    }
+
+    return m_loggerQueueInterface;
+}
+
+EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &ConsoleMain::getHTTPQueueInterface()
+{
+    if (m_HTTPQueueInterface == nullptr)
+    {
+        m_HTTPQueueInterface = std::make_shared<EVENT_MESSAGE::HTTPEventQueue>();
+    }
+
+    return m_HTTPQueueInterface;
 }

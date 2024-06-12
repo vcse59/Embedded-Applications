@@ -15,6 +15,13 @@
 
 namespace LOGGER_SERVICE
 {
+	enum LOG_OUTPUT
+	{
+		LOG_OUTPUT_FILE = 0,
+		LOG_OUTPUT_CONSOLE = 1,
+		LOG_OUTPUT_REMOTE = 2
+	};
+
 	enum eLOG_LEVEL_ENUM
 	{
 	    NONE         =   0,
@@ -29,5 +36,8 @@ namespace LOGGER_SERVICE
 	    public:
 		std::string getLogLevelString(LOGGER_SERVICE::eLOG_LEVEL_ENUM pLogLevel);
 	};
+
+	#define LOG_FILE_NAME	"applicationLog.txt"
+	#define LOG_REMOTE_PORT	11111
 }
 #endif /* LogLevel_h */

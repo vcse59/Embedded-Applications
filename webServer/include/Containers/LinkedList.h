@@ -2,8 +2,9 @@
 #define __LINKED_LIST_H__
 
 #include <iostream>
+#include <functional>
+
 #include "CommonClasses/CommonDefinitions.h"
-#include "Adapters/ConsoleAppInterface.h"
 
 using namespace COMMON_DEFINITIONS;
 using namespace std;
@@ -18,14 +19,14 @@ namespace Storage
         explicit SingleLLNode(char* data, unsigned int dataLength, std::function<std::string()> funcCallback)
         {
             mCallback = funcCallback;
-            mData = new char[dataLength];
+            mData = new char[dataLength + 1];
             setData(data, dataLength);
         }
 
         // Parameterized Constructor
         explicit SingleLLNode(char* data, unsigned int dataLength)
         {
-            mData = new char[dataLength];
+            mData = new char[dataLength + 1];
             setData(data, dataLength);
         }
 
@@ -63,8 +64,9 @@ namespace Storage
             mNext = NULL;
             mCallback = instance.mCallback;
             mDataLength = instance.getDataLength();
-            mData = new char[mDataLength];
+            mData = new char[mDataLength + 1];
             memcpy(mData, instance.getData(), mDataLength);
+            mData[mDataLength] = '\0';
         }
 
         // Assignment operator
@@ -84,8 +86,9 @@ namespace Storage
             mCallback = instance.mCallback;
             mNext = NULL;
             mDataLength = instance.getDataLength();
-            mData = new char[mDataLength];
+            mData = new char[mDataLength + 1];
             memcpy(mData, instance.getData(), mDataLength);
+            mData[mDataLength] = '\0';
             return *this;
         }
 
@@ -104,11 +107,12 @@ namespace Storage
                 mData = nullptr;
             }
 
-            mData = new char[dataLength];
+            mData = new char[dataLength + 1];
             memset(mData, 0, dataLength);
             mKey = generateKey();
             memcpy(mData, data, dataLength);
             mDataLength = dataLength;
+            mData[dataLength] = '\0';
         }
 
         int generateKey() const 
@@ -144,8 +148,8 @@ namespace Storage
         unsigned long mKey = {0};
         std::mutex mMutex;
         Storage::SingleLLNode *mNext = NULL;
-        SingleLLNode(const SingleLLNode &&) = delete;
-        SingleLLNode &operator=(const SingleLLNode &&) = delete;
+        //SingleLLNode(const SingleLLNode &&) = delete;
+        //SingleLLNode &operator=(const SingleLLNode &&) = delete;
     };
 
     typedef std::shared_ptr<Storage::SingleLLNode> S_PTR_SINGLELL_NODE;
@@ -154,7 +158,6 @@ namespace Storage
     class SingleLinkedList{
 
         public:
-            SingleLinkedList(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger){}
             SingleLinkedList();
             ~SingleLinkedList();
 
@@ -180,7 +183,7 @@ namespace Storage
             unsigned int mNodeCount = 0;
             std::mutex mMutex;
             T *mHeadNode = nullptr;
-            LOGGER_SERVICE::S_PTR_LOGGER m_logger = nullptr;
+
             SingleLinkedList(const SingleLinkedList&) = delete;
             SingleLinkedList& operator=(const SingleLinkedList&) = delete;
             SingleLinkedList(const SingleLinkedList&&) = delete;

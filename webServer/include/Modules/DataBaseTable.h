@@ -1,8 +1,7 @@
 #ifndef __DATABASE_TABLE_H__
 #define __DATABASE_TABLE_H__
 
-#include "Interfaces/DataBaseTableInterface.h"
-#include "Modules/Logger/Logger.h"
+#include "Modules/ConsoleMain.h"
 
 namespace DATABASE_SERVICE
 {

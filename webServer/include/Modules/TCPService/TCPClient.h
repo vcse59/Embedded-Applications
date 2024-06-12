@@ -43,11 +43,12 @@ namespace NetworkClass
             std::string m_ServerIPAddress;
             bool m_CloseConnection = {false}; 
             COMMON_DEFINITIONS::eSTATUS m_SocketStatus = COMMON_DEFINITIONS::eSTATUS::SOCKET_INITIALIZATION_FAILED;
-            void exchangeMessages();
+            void exchangeMessages(int socket_fd);
             TCPClient(const TCPClient&) = delete;
             TCPClient& operator=(const TCPClient&) = delete;
             TCPClient(const TCPClient&&) = delete;
             TCPClient& operator=(const TCPClient&&) = delete;
+            COMMON_DEFINITIONS::eSTATUS closeSocket(int socket_fd);
     };
 }
 

@@ -11,7 +11,7 @@ include_directories(../include)
 set(EXECUTABLE_NAME "SERVERCPP" CACHE STRING "Name of the executable")
 
 # Specify the source files
-file(GLOB SOURCES CONFIGURE_DEPENDS "../src/JsonModule/*" "../src/Adapters/*" "../src/Modules/*" "../src/Modules/TCPService/TCPServer.cpp" "../src/Modules/Logger/*" "../src/Modules/HTTPService/*")
+file(GLOB SOURCES CONFIGURE_DEPENDS "../src/Interfaces/*" "../src/JsonModule/*" "../src/Adapters/*" "../src/Modules/*" "../src/Modules/TCPService/TCPServer.cpp" "../src/Modules/Logger/*" "../src/Modules/HTTPService/*")
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES} ../src/server_main.cpp)
 
@@ -45,7 +45,7 @@ else()
 endif()
 
 # link against the library
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/lib/libjsoncpp.a PRIVATE mysqlcppconn-static resolv ssl crypto)
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/lib/libjsoncpp.a ${CMAKE_SOURCE_DIR}/../lib/mysql-lib/Ubuntu/mysql-connector-cpp/lib/x86_64-linux-gnu/libmysqlcppconn-static.a PRIVATE resolv ssl crypto)
 
 # Make sure my_executable depends on my_library
 add_dependencies(${EXECUTABLE_NAME} jsoncpp)

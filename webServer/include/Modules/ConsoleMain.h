@@ -13,6 +13,16 @@
 
 // Include header files
 #include "Adapters/ConsoleAppInterface.h"
+#include "Modules/TCPService/TCPServer.h"
+#include "Modules/TCPService/TCPClient.h"
+#include "Modules/Logger/Logger.h"
+#include "Modules/EventMessage/DBEventQueue.h"
+#include "Modules/EventMessage/LoggerEventQueue.h"
+#include "Modules/EventMessage/HTTPEventQueue.h"
+#include "Modules/DataBaseTable.h"
+#include "Modules/MySQLConnector.h"
+#include "Modules/Logger/ConsoleWriter.h"
+#include "Modules/Logger/FileWriter.h"
 
 namespace FRAMEWORK
 {
@@ -38,13 +48,33 @@ namespace FRAMEWORK
                 HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
                 HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER httpSessionManager = consoleApp->getHTTPSessionManager();
                 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE dbQueueInterface = consoleApp->getDBQueueInterface();
+                EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE loggerQueueInterface = consoleApp->getLoggerQueueInterface();
+                EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE httpQueueInterface = consoleApp->getHTTPQueueInterface();
 
                 status = dbQueueInterface->initializeQueue();
 
                 // Initialize the queue for db
                 if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
                 {
-                    LOGGER(logger) << "Failed to initialize queue" << std::endl;
+                    LOGGER(logger) << "Failed to initialize DB queue" << std::endl;
+                    return status;
+                }
+
+                status = loggerQueueInterface->initializeQueue();
+
+                // Initialize the queue for logger
+                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    LOGGER(logger) << "Failed to initialize logger queue" << std::endl;
+                    return status;
+                }
+
+                status = httpQueueInterface->initializeQueue();
+
+                // Initialize the queue for db
+                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    LOGGER(logger) << "Failed to initialize HTTPEvent queue" << std::endl;
                     return status;
                 }
 
@@ -87,6 +117,11 @@ namespace FRAMEWORK
             // Returns DB Queue class singleton interface
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getDBQueueInterface() override;
 
+            // Returns Logger Queue class singleton interface
+            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getLoggerQueueInterface() override;
+
+            // Returns HTTP Queue class singleton interface
+            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getHTTPQueueInterface() override;
 
             // Returns S_PTR_CONSOLEAPPINTERFACE class singleton instance
             static std::shared_ptr<FRAMEWORK::ConsoleAppInterface> getConsoleAppInterface()
@@ -109,5 +144,4 @@ namespace FRAMEWORK
 
     typedef std::shared_ptr<FRAMEWORK::ConsoleMain> S_PTR_CONSOLEMAIN;
 }
-
 #endif

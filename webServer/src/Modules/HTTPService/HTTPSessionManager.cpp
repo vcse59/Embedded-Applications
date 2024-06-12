@@ -1,5 +1,3 @@
-#include "Modules/HTTPService/HTTPSessionManager.h"
-#include "Modules/Logger/Logger.h"
 #include "Modules/ConsoleMain.h"
 
 using namespace HTTP_SERVICE;

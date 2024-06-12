@@ -3,7 +3,6 @@
 #include <thread>
 #include<unistd.h>
 
-#include "Modules/MySQLConnector.h"
 #include "Modules/ConsoleMain.h"
 
 using namespace DATABASE_SERVICE;
@@ -13,9 +12,9 @@ MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(log
 {
     m_DbName            = "Test1";
     m_RemotePort        = 3306;
-    m_SqlRemoteIP       = "<MSQL_SERVER_IP_ADDRESS>";
-    m_DbUserName        = "<MYSQL_DB_USER_NAME>";
-    m_DbUserPassword    = "<MYSQL_DB_USER_PASSWORD>";
+    m_SqlRemoteIP       = "<MYSQL_REMOTE_SERVICE_IP>";
+    m_DbUserName        = "<MYSQL_USERNAME>";
+    m_DbUserPassword    = "<MYSQL_USERPASSWORD>";
     m_TableName         = "UserData";
     m_AccessTokenTable  = "AccessTokenTable";
     m_UserTableName     = "UserTable";
@@ -150,15 +149,15 @@ void MySQLConnector::processDBEvents()
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getDBQueueInterface();
 
-    std::unique_lock<std::mutex> lck(mMutex);
 
     while (true)
     {
+        std::unique_lock<std::mutex> lck(mMutex);
         while (!readyToProcess)
             mNotifyConsumer.wait(lck);
 
         while (queueInterface->getQueueLength() > 0){
-            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->popEvent();
+            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
             EVENT_MESSAGE::DBMessage* message = (EVENT_MESSAGE::DBMessage*)elem1->getEventData();
 
             COMMON_DEFINITIONS::eSTATUS status = executeQuery(message->mTableName, message->mQueryString, message->mQueryType);

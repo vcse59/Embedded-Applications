@@ -6,9 +6,9 @@
 #include <unordered_set>
 #include <mutex>
 
+#include "Modules/ConsoleMain.h"
 #include "CommonClasses/CommonDefinitions.h"
 #include "Modules/HTTPService/HTTPSession.h"
-#include "Modules/Logger/Logger.h"
 #include "Modules/HTTPService/HTTPParams.h"
 
 namespace HTTP_SERVICE

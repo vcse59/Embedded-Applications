@@ -1,8 +1,9 @@
 #include <cstddef>        // std::size_t
 
-#include "Modules/HTTPService/HTTPUtility.h"
 #include "Modules/ConsoleMain.h"
+#include "Modules/HTTPService/HTTPUtility.h"
 #include "CommonClasses/CommonDefinitions.h"
+#include "Modules/HTTPService/HTTPSession.h"
 
 using namespace HTTP_SERVICE;
 
@@ -51,7 +52,7 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
 
     EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getDBQueueInterface();
     std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> event = std::make_shared<EVENT_MESSAGE::DBEventMessage>();
-    event->setMessage(reinterpret_cast<char *>(&message), sizeof(message), COMMON_DEFINITIONS::MESSAGE_TYPE::DB_MESSAGE);
+    event->setMessage(reinterpret_cast<char *>(&message), sizeof(message));
     queueInterface->pushEvent(event);
     dbConnector->notifyDBThread();
 

@@ -12,10 +12,31 @@ namespace EVENT_MESSAGE
         public:
             EventQueueInterface(){}
             virtual ~EventQueueInterface() {}
-            virtual COMMON_DEFINITIONS::eSTATUS initializeQueue() = 0;
-            virtual COMMON_DEFINITIONS::eSTATUS pushEvent(std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> msg) = 0;
-            virtual std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> popEvent() = 0;
-            virtual unsigned int getQueueLength() = 0;
+
+            COMMON_DEFINITIONS::eSTATUS initializeQueue()
+            {
+                mEventQueue = std::make_shared<Storage::QueueContainer<Storage::SingleLLNode>>();
+                return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+            }
+
+            COMMON_DEFINITIONS::eSTATUS pushEvent(std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> msg)
+            {
+                mEventQueue->enqueue(msg->getMessage());
+                return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+            }
+
+            std::shared_ptr<Storage::SingleLLNode> popEvent()
+            {
+                return std::make_shared<Storage::SingleLLNode>(mEventQueue->dequeue());
+            }
+
+            unsigned int getQueueLength()
+            {
+                return mEventQueue->getLength();
+            }
+
+            virtual std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> getEvent() = 0;
+
         protected:
             std::shared_ptr<Storage::QueueContainer<Storage::SingleLLNode>> mEventQueue;
     };
