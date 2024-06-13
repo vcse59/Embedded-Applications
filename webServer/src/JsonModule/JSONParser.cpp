@@ -4,8 +4,7 @@
 using namespace std;
 using namespace JSON_SERVICE;
 
-jsonParser::jsonParser(LOGGER_SERVICE::S_PTR_LOGGER logger, std::shared_ptr<std::string> data)
-    :m_logger(logger)
+jsonParser::jsonParser(std::shared_ptr<std::string> data)
 {
     m_Data  = data;
 }

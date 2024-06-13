@@ -9,9 +9,9 @@
 #include <poll.h>
 #include <sys/epoll.h>
 
-#include "Modules/TCPService/TCPServer.h"
 #include "Modules/ConsoleMain.h"
 #include "Modules/HTTPService/HTTPParams.h"
+#include "Modules/EventMessage/HTTPEventMessage.h"
 
 using namespace std;
 using namespace NetworkClass;
@@ -21,6 +21,8 @@ TCPServer::TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumbe
 {
 	m_logger        =   logger;
 	mPortNumber     =   portNumber;
+    mHttpThread = std::make_shared<std::thread>(&NetworkClass::TCPServer::processHTTPMessage, this);
+    mHttpThread->detach();
 }
 
 TCPServer::~TCPServer()
@@ -78,7 +80,7 @@ eSTATUS TCPServer::createServer(enum NetworkClass::eLISTENING_MODE mode)
 		perror("bind failed");   
         mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
 	}   
-	LOGGER(m_logger) << "Listener on port " <<  PORT << std::endl;   
+	LOGGER(m_logger) << "Listener on port " << mPortNumber << std::endl;   
 
 	//try to specify maximum of 3 pending connections for the master socket  
 	if (listen(mServerSocket, MAX_CONNECTIONS) < 0)   
@@ -113,7 +115,7 @@ eSTATUS TCPServer::useSelect()
 
     isServerClosed = false;
 	addrlen = sizeof(address);   
-	LOGGER(m_logger) << "Waiting for connections ..." << std::endl;   
+	LOGGER(m_logger) << "Waiting for connections ..." << std::endl;
 
 
     while(!isServerClosed)   
@@ -152,7 +154,7 @@ eSTATUS TCPServer::useSelect()
 	    char ipString[INET6_ADDRSTRLEN]; // Maximum length for IPv6 address string
             struct sockaddr_in *ipv4 = (struct sockaddr_in *)(&client_addr);
             inet_ntop(AF_INET, &(ipv4->sin_addr), ipString, INET_ADDRSTRLEN);
-            LOGGER(m_logger) << "New client connected : " << client_socket <<  "from " << ipString << std::endl;
+            LOGGER(m_logger) << "New client connected : " << client_socket << "from " << ipString << std::endl;
 
         // Handle client request here
         // Spawn a new thread to handle the connection
@@ -171,7 +173,7 @@ eSTATUS TCPServer::usePoll()
 
     isServerClosed = false;
 	addrlen = sizeof(address);   
-	LOGGER(m_logger) << "Waiting for connections ..." << std::endl;   
+	LOGGER(m_logger) << "Waiting for connections ..." << std::endl;
 
     struct pollfd fds[MAX_CONNECTIONS + 1]; // Plus 1 for master socket
     memset(fds, 0, sizeof(fds));
@@ -201,7 +203,8 @@ eSTATUS TCPServer::usePoll()
                 LOGGER(m_logger) << "accept failed" << std::endl;
                 exit(EXIT_FAILURE);
             }
-        LOGGER(m_logger) << "New client connected : " << new_socket <<  "from IP Address : " << inet_ntoa(address.sin_addr) << " Port : " << ntohs(address.sin_port) << std::endl;
+            LOGGER(m_logger) << "New client connected : " << new_socket << "from IP Address : " << inet_ntoa(address.sin_addr) << " Port : " << ntohs(address.sin_port) << std::endl;
+
         // Handle client request here
         // Spawn a new thread to handle the connection
         std::thread threadObject(&TCPServer::handle_connection, this, new_socket);
@@ -221,7 +224,7 @@ eSTATUS TCPServer::useEPoll()
     isServerClosed = false;
 	//accept the incoming connection  
 	addrlen = sizeof(address);   
-	LOGGER(m_logger) << "Waiting for connections ..." << std::endl; 
+	LOGGER(m_logger) << "Waiting for connections ..." << std::endl;
 
     // Create epoll instance
     if ((epoll_fd = epoll_create1(0)) == -1)
@@ -280,23 +283,26 @@ eSTATUS TCPServer::useEPoll()
 
 void TCPServer::handle_connection(int client_socket) {
 
-    std::string receivedData;
+    std::unique_lock<std::mutex> lck(mMutex);
+
+    EVENT_MESSAGE::HTTPMessage message;
+    message.socketId = client_socket;
 
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getHTTPQueueInterface();
+    std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> event = std::make_shared<EVENT_MESSAGE::HTTPEventMessage>();
+    event->setMessage(reinterpret_cast<char *>(&message), sizeof(message));
+    queueInterface->pushEvent(event);
 
-    receiveMessage(client_socket, receivedData);
-
-    HTTP_SERVICE::HttpParams params(m_logger, receivedData);
-    std::string http_response = consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
-
-    sendMessage(client_socket, http_response.c_str());
-
-    close(client_socket);
+    mNotifyConsumer.notify_one(); // notify all waiting threads
+    readyToProcess = true;
+    while (readyToProcess)
+        mNotifyProducer.wait(lck);
 }
 
-COMMON_DEFINITIONS::eSTATUS TCPServer::connectToServer()
+void TCPServer::startClient()
 {
-    return eSTATUS::SUCCESS;
+    return;
 }
 
 eSTATUS TCPServer::sendMessage(int socket, const std::string& message)
@@ -312,7 +318,7 @@ eSTATUS TCPServer::sendMessage(int socket, const std::string& message)
             break;
         } else if (sent == 0) {
             // Connection closed by peer
-            LOGGER(m_logger) << "Connection closed by peer\n";
+            LOGGER(m_logger)  << "Connection closed by peer\n";
             break;
         } else {
             // Advance buffer pointer and update remaining data size
@@ -372,4 +378,38 @@ void* TCPServer::get_in_addr(struct sockaddr *sa){
         return &(((struct sockaddr_in*)sa)->sin_addr);
 
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+void TCPServer::processHTTPMessage()
+{
+    while (true)
+    {
+        std::unique_lock<std::mutex> lck(mMutex);
+        while (!readyToProcess)
+            mNotifyConsumer.wait(lck);
+
+        FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+        EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getHTTPQueueInterface();
+        while (queueInterface->getQueueLength() > 0)
+        {
+            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
+            EVENT_MESSAGE::HTTPMessage *message = (EVENT_MESSAGE::HTTPMessage *)elem1->getEventData();
+
+            std::string receivedData;
+
+            FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+
+            receiveMessage(message->socketId, receivedData);
+
+            HTTP_SERVICE::HttpParams params(m_logger, receivedData);
+            std::string http_response = consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
+
+            sendMessage(message->socketId, http_response.c_str());
+
+            close(message->socketId);
+
+            mNotifyProducer.notify_one();
+            readyToProcess = false;
+        }
+    }
 }

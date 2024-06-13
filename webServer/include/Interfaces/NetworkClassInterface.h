@@ -19,7 +19,7 @@ namespace NetworkClass
             NetworkClassInterface(){}
             virtual ~NetworkClassInterface(){}
             virtual COMMON_DEFINITIONS::eSTATUS createServer(enum NetworkClass::eLISTENING_MODE mode = NetworkClass::eLISTENING_MODE::DEFAULT_MODE) = 0;
-            virtual COMMON_DEFINITIONS::eSTATUS connectToServer() = 0;
+            virtual void startClient() = 0;
             virtual COMMON_DEFINITIONS::eSTATUS sendMessage(int socket, const std::string& message) = 0;
             virtual COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) = 0;
             virtual COMMON_DEFINITIONS::eSTATUS closeSocket() = 0;

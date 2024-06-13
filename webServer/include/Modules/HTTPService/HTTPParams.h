@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iomanip>
+#include <chrono>
+#include <random>
+#include <sstream>
 #include <unordered_map>
 
 #include "Modules/HTTPService/HTTPDefinitions.h"
@@ -59,8 +63,11 @@ namespace HTTP_SERVICE
                 str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
             }
 
-        private:
+            std::string getUserID() const{
+                return m_UserId;
+            }
 
+        private:
             // Function to remove special characters from a string
             std::string removeSpecialCharacters(const std::string& input) {
                 std::string output;
@@ -77,8 +84,8 @@ namespace HTTP_SERVICE
             HTTP_SERVICE::eHTTP_ERROR m_HttpError = HTTP_SERVICE::eHTTP_ERROR::NO_ERROR;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             HTTP_SERVICE::eCONTENT_TYPE m_ContentType = HTTP_SERVICE::eCONTENT_TYPE::APPLICATION_UNKNOWN;
-            std::string m_SessonID;
             std::string m_HostIP;
+            std::string m_UserId;
             std::unordered_map<HTTP_SERVICE::eHEADER_FIELD, std::string> m_HeaderInfo;
             HttpParams(const HttpParams&) = delete;
             HttpParams& operator=(const HttpParams&) = delete;

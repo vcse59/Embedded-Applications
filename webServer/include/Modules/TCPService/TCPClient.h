@@ -29,11 +29,12 @@ namespace NetworkClass
             ~TCPClient();
 
             COMMON_DEFINITIONS::eSTATUS createServer(enum NetworkClass::eLISTENING_MODE mode = NetworkClass::eLISTENING_MODE::DEFAULT_MODE) override;
-            COMMON_DEFINITIONS::eSTATUS connectToServer() override;
+            void startClient() override;
             COMMON_DEFINITIONS::eSTATUS sendMessage(int socket, const std::string& message) override;
             COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) override;
             COMMON_DEFINITIONS::eSTATUS closeSocket() override;
             int getConnectionId() const override;
+            void run();
         
         private:
             int m_Socketfd = -1;
@@ -42,11 +43,12 @@ namespace NetworkClass
             std::string m_ServerIPAddress;
             bool m_CloseConnection = {false}; 
             COMMON_DEFINITIONS::eSTATUS m_SocketStatus = COMMON_DEFINITIONS::eSTATUS::SOCKET_INITIALIZATION_FAILED;
-            void exchangeMessages();
+            void exchangeMessages(int socket_fd);
             TCPClient(const TCPClient&) = delete;
             TCPClient& operator=(const TCPClient&) = delete;
             TCPClient(const TCPClient&&) = delete;
             TCPClient& operator=(const TCPClient&&) = delete;
+            COMMON_DEFINITIONS::eSTATUS closeSocket(int socket_fd);
     };
 }
 

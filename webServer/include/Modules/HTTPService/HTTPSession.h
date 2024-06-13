@@ -1,10 +1,9 @@
 #ifndef __HTTP_SESSION_H__
-#define __HTTP_SESSION_H_
+#define __HTTP_SESSION_H__
 
 #include <chrono>
 
 #include "CommonClasses/CommonDefinitions.h"
-#include "Modules/Logger/Logger.h"
 #include "Modules/HTTPService/HTTPParams.h"
 
 namespace HTTP_SERVICE
@@ -25,6 +24,7 @@ namespace HTTP_SERVICE
         private:
 
             std::string m_SessionId;
+            std::string m_UserId;
             std::string m_HostURL;
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             HttpSession(const HttpSession&) = delete;

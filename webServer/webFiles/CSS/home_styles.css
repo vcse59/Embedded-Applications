@@ -1,0 +1,68 @@
+/* Basic styles */
+body {
+    font-family: Arial, sans-serif;
+    /* Set a default font */
+    margin: 0;
+    /* Remove default margin from the body */
+    padding: 0;
+    /* Remove default padding from the body */
+}
+
+/* Header styles */
+header {
+    background-color: #f0f0f0;
+    /* Light gray background for the header */
+    padding: 20px;
+    /* Add some padding for spacing */
+}
+
+h1 {
+    margin: 0;
+    /* Remove default margin from the heading */
+}
+
+/* Navigation menu styles */
+nav {
+    display: flex;
+    /* Arrange menu items horizontally */
+    list-style: none;
+    /* Remove default list style (bullets) */
+    padding: 0;
+    /* Remove default padding from the list */
+    margin: 0;
+    /* Remove default margin from the list */
+}
+
+nav li {
+    margin-right: 20px;
+    /* Add spacing between menu items */
+}
+
+nav a {
+    text-decoration: none;
+    /* Remove underline from links */
+    color: black;
+    /* Set link color */
+}
+
+nav a:hover {
+    /* Style for links on hover */
+    color: #007bff;
+    /* Change link color on hover (blue) */
+}
+
+/* Main content styles */
+main {
+    padding: 20px;
+    /* Add padding for the main content area */
+}
+
+/* Footer styles */
+footer {
+    background-color: #f0f0f0;
+    /* Light gray background for the footer */
+    text-align: center;
+    /* Center the content in the footer */
+    padding: 10px;
+    /* Add some padding for spacing */
+}

@@ -1,8 +1,9 @@
 #include <cstddef>        // std::size_t
 
-#include "Modules/HTTPService/HTTPUtility.h"
 #include "Modules/ConsoleMain.h"
+#include "Modules/HTTPService/HTTPUtility.h"
 #include "CommonClasses/CommonDefinitions.h"
+#include "Modules/HTTPService/HTTPSession.h"
 
 using namespace HTTP_SERVICE;
 
@@ -10,6 +11,9 @@ HttpSession::HttpSession(LOGGER_SERVICE::S_PTR_LOGGER logger
     , std::string sessionId, std::string hostURL){
     m_logger    = logger;
     m_SessionId = sessionId;
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
+    m_UserId = httpUtility->generateSessionID();
     m_HostURL   = "http://" + hostURL;
 }
 HttpSession::~HttpSession(){}
@@ -29,14 +33,32 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
-    std::string tableName = "sampleTable";
-    std::string encodedPayload = httpUtility->base64_encode(httpParams.getHTTPRequest());
-    std::string sessionID = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
-    std::string resourceURL = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL);
-    std::string httpMethod = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD);
-    std::string httpError = httpParams.getError();
+    std::string tableName = "UserData";
+    DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbConnector = consoleApp->getDBInstance();
+    std::string encodedPayload  = httpUtility->base64_encode(httpParams.getHTTPRequest());
+    std::string sessionID       = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
+    std::string resourceURL     = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL);
+    std::string httpMethod      = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD);
+    std::string httpError       = httpParams.getError();
 
-    std::string response;
+    std::string insertQuery = "INSERT INTO " + tableName + " (USERID, SESSIONID, HTTPMETHOD, RESOURCEURL, DATARAW, HTTPERROR)  \
+        VALUES (\"" +  m_UserId + "\" , \"" +  sessionID + "\" , \"" + httpMethod + "\", \""  + resourceURL + "\", \"" + encodedPayload +
+        "\", \""  + httpError + "\")";
+
+    EVENT_MESSAGE::DBMessage message;
+    strcpy(message.mQueryString , insertQuery.c_str());
+    strcpy(message.mTableName, tableName.c_str());
+    message.mQueryType = COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION;
+
+    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getDBQueueInterface();
+    std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> event = std::make_shared<EVENT_MESSAGE::DBEventMessage>();
+    event->setMessage(reinterpret_cast<char *>(&message), sizeof(message));
+    queueInterface->pushEvent(event);
+    dbConnector->notifyDBThread();
+
+        // COMMON_DEFINITIONS::eSTATUS status = dbConnector->executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
+
+        std::string response;
     LOGGER(m_logger) << "Processing Request : " << httpMethod << std::endl;
     LOGGER(m_logger) << "Processing Resource URL : " << resourceURL << std::endl;
 
@@ -109,6 +131,7 @@ COMMON_DEFINITIONS::eSTATUS HttpSession::processLogin(HTTP_SERVICE::HttpParams& 
 
     std::string username;
     std::string password;
+
 
     std::size_t pos = requestBody.find_first_of('&');
     std::string usernameString = requestBody.substr(0, pos);

@@ -13,4 +13,4 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "../src/Modules/TCPService/TCPClient.cpp")
 add_executable(${EXECUTABLE_NAME} ${SOURCES} ../src/client_main.cpp)
 
 # Specify include directories 
-target_include_directories(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/include)
+target_include_directories(${EXECUTABLE_NAME} PUBLIC ${BINARY_DIR}/include )
