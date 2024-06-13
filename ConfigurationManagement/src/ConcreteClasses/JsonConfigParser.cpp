@@ -14,6 +14,6 @@ JsonConfigParser::~JsonConfigParser()
 
 Configuration::CONFIGURATION_STATUS JsonConfigParser::parse()
 {
-    std::cout << "Parsing Json Configuration" << std::endl;
+    std::cout << "Parsing Json Configuration file" << std::endl;
     return Configuration::CONFIGURATION_STATUS::CONFIGURATION_READ_PARSING_SUCCESS;
 }

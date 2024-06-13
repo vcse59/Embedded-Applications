@@ -33,6 +33,11 @@ target_include_directories(ConfigurationManagement PRIVATE include ${jsoncpp_SOU
 # Link third-party libraries
 target_link_libraries(ConfigurationManagement PRIVATE jsoncpp_lib tinyxml2)
 
+# If toolchain file is provided, include it
+if(CMAKE_TOOLCHAIN_FILE)
+    include(${CMAKE_TOOLCHAIN_FILE})
+endif()
+
 # Determine the appropriate library file extensions and paths
 if(WIN32)
     set(JSONCPP_LIB_FILE "libjsoncpp.dll")
