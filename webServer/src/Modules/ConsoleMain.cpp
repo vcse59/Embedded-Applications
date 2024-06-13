@@ -13,7 +13,7 @@ NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPServer()
 {
     if (m_nwInterface == nullptr)
     {
-        m_nwInterface = std::make_shared<TCPServer>(getLogger(), PORT);
+        m_nwInterface = std::make_shared<TCPServer>(getLogger(), SERVER_PORT);
     }
 
     return m_nwInterface;
@@ -58,7 +58,7 @@ LOGGER_SERVICE::S_PTR_LOGGER& ConsoleMain::getLogger()
 {
     if (m_Logger == nullptr)
     {
-        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::ConsoleWriter>());
+        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::RemoteWriter>("127.0.0.1", LOG_REMOTE_PORT));
     }
     return m_Logger;
 }
@@ -81,6 +81,16 @@ EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &ConsoleMain::getLoggerQueueInterface
     }
 
     return m_loggerQueueInterface;
+}
+
+EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &ConsoleMain::getLoggerPendingQueueInterface()
+{
+    if (m_loggerPendingQueueInterface == nullptr)
+    {
+        m_loggerPendingQueueInterface = std::make_shared<EVENT_MESSAGE::LoggerEventQueue>();
+    }
+
+    return m_loggerPendingQueueInterface;
 }
 
 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &ConsoleMain::getHTTPQueueInterface()

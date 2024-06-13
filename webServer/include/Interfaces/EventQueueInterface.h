@@ -19,17 +19,6 @@ namespace EVENT_MESSAGE
                 return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
             }
 
-            COMMON_DEFINITIONS::eSTATUS pushEvent(std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> msg)
-            {
-                mEventQueue->enqueue(msg->getMessage());
-                return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
-            }
-
-            std::shared_ptr<Storage::SingleLLNode> popEvent()
-            {
-                return std::make_shared<Storage::SingleLLNode>(mEventQueue->dequeue());
-            }
-
             unsigned int getQueueLength()
             {
                 return mEventQueue->getLength();
@@ -37,7 +26,25 @@ namespace EVENT_MESSAGE
 
             virtual std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> getEvent() = 0;
 
+            COMMON_DEFINITIONS::eSTATUS pushEvent(std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> msg)
+            {
+                mEventQueue->enqueue(msg->getMessage());
+                return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+            }
+
+            virtual std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> front() = 0;
+
         protected:
+            std::shared_ptr<Storage::SingleLLNode> popEvent()
+            {
+                return std::make_shared<Storage::SingleLLNode>(mEventQueue->dequeue());
+            }
+
+            std::shared_ptr<Storage::SingleLLNode> frontEvent()
+            {
+                return std::make_shared<Storage::SingleLLNode>(mEventQueue->front());
+            }
+
             std::shared_ptr<Storage::QueueContainer<Storage::SingleLLNode>> mEventQueue;
     };
 

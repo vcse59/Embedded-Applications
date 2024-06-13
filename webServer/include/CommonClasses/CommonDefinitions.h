@@ -1,11 +1,14 @@
 /**
  * @file CommonDefintions.h
+ * @brief Header file for the CommonDefintions class
  *
- * @brief This file declares all enumeration and common defintions
+ * This file contains the declaration of the CommonDefinitions class,
+ * which demonstrates defining all the common variables
+ *
+ * Contact: Vivek Yadav <v.cse59@gmail.com>
  *
  * @author Vivek Yadav
- * Contact: v.cse59@gmail.com
- *
+ * @date 2024-06-12
  */
 
 #ifndef __COMMON_DEFINITIONS_H__
@@ -24,7 +27,9 @@
 #define STRING_SIZE    10 * 1024
 
 #define MAX_BUFFER_SIZE (STRING_SIZE + 1024)
-#define PORT 9999 
+#define SERVER_PORT 9999
+#define LOG_REMOTE_PORT 10000
+
 #define MAX_HEADER_SIZE 2048
 #define MAX_BODY_SIZE   8192
 #define SERVER_LISTENDER_TIMEOUT_IN_MS 1

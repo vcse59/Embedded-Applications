@@ -38,6 +38,5 @@ namespace LOGGER_SERVICE
 	};
 
 	#define LOG_FILE_NAME	"applicationLog.txt"
-	#define LOG_REMOTE_PORT	11111
 }
 #endif /* LogLevel_h */

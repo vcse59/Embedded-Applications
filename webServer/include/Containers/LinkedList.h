@@ -1,3 +1,16 @@
+/**
+ * @file LinkedList.h
+ * @brief Header file for the LinkedList class
+ *
+ * This file contains the declaration of the LinkedList class,
+ * which demonstrates saving values in linkedlist
+ *
+ * Contact: Vivek Yadav <v.cse59@gmail.com>
+ *
+ * @author Vivek Yadav
+ * @date 2024-06-12
+ */
+
 #ifndef __LINKED_LIST_H__
 #define __LINKED_LIST_H__
 
@@ -173,6 +186,8 @@ namespace Storage
 
             T popFront();
             T popBack();
+
+            T front();
 
             T search(unsigned long pKey);
 
@@ -435,6 +450,19 @@ T Storage::SingleLinkedList<T>::popFront()
     delete tempNode;
     mNodeCount--;
     return output;
+}
+
+template <class T>
+T Storage::SingleLinkedList<T>::front()
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+    T output;
+    if (mHeadNode == NULL)
+    {
+        return output;
+    }
+
+    return *mHeadNode;
 }
 
 template <class T>

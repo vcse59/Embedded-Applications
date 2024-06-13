@@ -4,14 +4,20 @@
 using namespace LOGGER_SERVICE;
 
 LogWriterInterface::LogWriterInterface(std::ostream *os) : outObject(os)
-    {
-        mLogThread = std::make_shared<std::thread>(&LOGGER_SERVICE::LogWriterInterface::processLogMessage, this);
-        mLogThread->detach();
-    }
+{
+    mLogThread = std::make_shared<std::thread>(&LOGGER_SERVICE::LogWriterInterface::processLogMessage, this);
+    mLogThread->detach();
+}
 
 LogWriterInterface::LogWriterInterface()
 {
     mLogThread = std::make_shared<std::thread>(&LOGGER_SERVICE::LogWriterInterface::processLogMessage, this);
+    mLogThread->detach();
+}
+
+LogWriterInterface::LogWriterInterface(std::function<void()> funcCallback)
+{
+    mLogThread = std::make_shared<std::thread>(funcCallback);
     mLogThread->detach();
 }
 

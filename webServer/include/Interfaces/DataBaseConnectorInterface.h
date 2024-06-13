@@ -1,3 +1,16 @@
+/**
+ * @file DataBaseConnectorInterface.h
+ * @brief Header file for the DataBaseConnectorInterface class
+ *
+ * This file contains the declaration of the DataBaseConnectorInterface class,
+ * which demonstrates interfaces to communicate with DB
+ *
+ * Contact: Vivek Yadav <v.cse59@gmail.com>
+ *
+ * @author Vivek Yadav
+ * @date 2024-06-12
+ */
+
 #ifndef __DATABASE_CONNECTOR_H__
 #define __DATABASE_CONNECTOR_H__
 

@@ -17,11 +17,11 @@ namespace LOGGER_SERVICE{
     {
     public:
         LogWriterInterface(std::ostream *os);
+        LogWriterInterface(std::function<void()> funcCallback);
         LogWriterInterface();
         virtual ~LogWriterInterface();
         virtual void write(const std::string logMessage);
         void set(std::ostream *os) { outObject = os; }
-        void processLogMessage();
 
     protected:
         std::shared_ptr<std::thread> mLogThread = nullptr;
@@ -30,6 +30,7 @@ namespace LOGGER_SERVICE{
         std::condition_variable mNotifyConsumer;
         std::condition_variable mNotifyProducer;
         bool readyToProcess = false;
+        virtual void processLogMessage();
     };
 
     typedef std::shared_ptr<LOGGER_SERVICE::LogWriterInterface> LOG_WRITER_SHARED_PTR;

@@ -23,6 +23,7 @@
 #include "Modules/MySQLConnector.h"
 #include "Modules/Logger/ConsoleWriter.h"
 #include "Modules/Logger/FileWriter.h"
+#include "Modules/Logger/RemoteWriter.h"
 
 namespace FRAMEWORK
 {
@@ -49,6 +50,7 @@ namespace FRAMEWORK
                 HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER httpSessionManager = consoleApp->getHTTPSessionManager();
                 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE dbQueueInterface = consoleApp->getDBQueueInterface();
                 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE loggerQueueInterface = consoleApp->getLoggerQueueInterface();
+                EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE loggerPendingQueueInterface = consoleApp->getLoggerPendingQueueInterface();
                 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE httpQueueInterface = consoleApp->getHTTPQueueInterface();
 
                 status = dbQueueInterface->initializeQueue();
@@ -57,6 +59,14 @@ namespace FRAMEWORK
                 if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
                 {
                     LOGGER(logger) << "Failed to initialize DB queue" << std::endl;
+                    return status;
+                }
+                status = loggerPendingQueueInterface->initializeQueue();
+
+                // Initialize the pending queue for logger
+                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    LOGGER(logger) << "Failed to initialize pending logger queue" << std::endl;
                     return status;
                 }
 
@@ -69,6 +79,14 @@ namespace FRAMEWORK
                     return status;
                 }
 
+                status = loggerQueueInterface->initializeQueue();
+
+                // Initialize the queue for logger
+                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    LOGGER(logger) << "Failed to initialize logger queue" << std::endl;
+                    return status;
+                }
                 status = httpQueueInterface->initializeQueue();
 
                 // Initialize the queue for db
@@ -119,6 +137,9 @@ namespace FRAMEWORK
 
             // Returns Logger Queue class singleton interface
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getLoggerQueueInterface() override;
+
+            // Returns Logger Pending Queue class singleton interface
+            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getLoggerPendingQueueInterface() override;
 
             // Returns HTTP Queue class singleton interface
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getHTTPQueueInterface() override;

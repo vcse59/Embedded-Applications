@@ -1,11 +1,14 @@
 /**
  * @file ConsoleAppInterface.h
+ * @brief Header file for the ConsoleAppInterface class
  *
- * @brief This file declares the interface for Console application
+ * This file contains the declaration of the ConsoleAppInterface class,
+ * which demonstrates basic C++ Abstract class implementation
+ *
+ * Contact: Vivek Yadav <v.cse59@gmail.com>
  *
  * @author Vivek Yadav
- * Contact: v.cse59@gmail.com
- *
+ * @date 2024-06-12
  */
 
 #ifndef __CONSOLE_APP_INTERFACE_H__
@@ -54,6 +57,9 @@ namespace FRAMEWORK
             // Returns Logger Queue class singleton interface
             virtual EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getLoggerQueueInterface() = 0;
 
+            // Returns Logger Pending Queue class singleton interface
+            virtual EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getLoggerPendingQueueInterface() = 0;
+
             // Returns HTTP Queue class singleton interface
             virtual EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getHTTPQueueInterface() = 0;
 
@@ -66,6 +72,7 @@ namespace FRAMEWORK
             LOGGER_SERVICE::S_PTR_LOGGER m_Logger = nullptr;
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_dbQueueInterface = nullptr;
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_loggerQueueInterface = nullptr;
+            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_loggerPendingQueueInterface = nullptr;
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_HTTPQueueInterface = nullptr;
 
         private:

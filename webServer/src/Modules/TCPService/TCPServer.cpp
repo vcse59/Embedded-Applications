@@ -80,7 +80,7 @@ eSTATUS TCPServer::createServer(enum NetworkClass::eLISTENING_MODE mode)
 		perror("bind failed");   
         mStatus = COMMON_DEFINITIONS::eSTATUS::ERROR;
 	}   
-	LOGGER(m_logger) << "Listener on port " << PORT << std::endl;   
+	LOGGER(m_logger) << "Listener on port " << mPortNumber << std::endl;   
 
 	//try to specify maximum of 3 pending connections for the master socket  
 	if (listen(mServerSocket, MAX_CONNECTIONS) < 0)   

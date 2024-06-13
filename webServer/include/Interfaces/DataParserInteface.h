@@ -1,3 +1,16 @@
+/**
+ * @file DataParserInterface.h
+ * @brief Header file for the DataParserInterface class
+ *
+ * This file contains the declaration of the DataParserInterface class,
+ * which demonstrates interfaces to serialize the objects
+ *
+ * Contact: Vivek Yadav <v.cse59@gmail.com>
+ *
+ * @author Vivek Yadav
+ * @date 2024-06-12
+ */
+
 #ifndef __DATA_PARSER_INTERFACE_H__
 #define __DATA_PARSER_INTERFACE_H__
 

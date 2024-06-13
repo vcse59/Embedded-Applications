@@ -58,7 +58,6 @@ void TCPClient::run()
         // Connect to server
         if (connect(socket_fd, (struct sockaddr *)&ServerAddress, sizeof (ServerAddress)) == -1)
         {
-            perror("Connect failed");
             std::cout << "Connection failed" << std::endl;
             closeSocket(socket_fd);
             return;

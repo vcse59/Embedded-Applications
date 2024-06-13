@@ -21,6 +21,16 @@ namespace EVENT_MESSAGE
 
                 return ret;
             }
+
+            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> front() override
+            {
+                std::shared_ptr<Storage::SingleLLNode> data = frontEvent();
+                std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> ret = std::make_shared<EVENT_MESSAGE::HTTPEventMessage>();
+                ret->setMessage(*data);
+                ret->unpackMessage();
+
+                return ret;
+            }
     };
 }
 

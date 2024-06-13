@@ -1,3 +1,16 @@
+/**
+ * @file EventMessageInterface.h
+ * @brief Header file for the EventMessageInterface class
+ *
+ * This file contains the declaration of the EventMessageInterface class,
+ * which demonstrates interfaces to push/pop recieve events
+ *
+ * Contact: Vivek Yadav <v.cse59@gmail.com>
+ *
+ * @author Vivek Yadav
+ * @date 2024-06-12
+ */
+
 #ifndef __EVENT_MESSAGE_INTERFACE_H__
 #define __EVENT_MESSAGE_INTERFACE_H__
 

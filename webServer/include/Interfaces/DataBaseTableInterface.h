@@ -1,3 +1,15 @@
+/**
+ * @file DataBaseTableInterface.h
+ * @brief Header file for the DataBaseTableInterface class
+ *
+ * This file contains the declaration of the DataBaseTableInterface class,
+ * which demonstrates interfaces to communicate with DB using queries
+ *
+ * Contact: Vivek Yadav <v.cse59@gmail.com>
+ *
+ * @author Vivek Yadav
+ * @date 2024-06-12
+ */
 #ifndef __DBTABLE_INTERFACE_H__
 #define __DBTABLE_INTERFACE_H__
 
