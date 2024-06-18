@@ -42,6 +42,9 @@ namespace FRAMEWORK
             // Returns DataBaseConnectorInterface class singleton instance
             virtual DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE getDBInstance() = 0;
 
+            // Returns DB Queue class singleton interface
+            virtual EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getDBQueueInterface() = 0;
+
             // Returns HttpParser class singleton instance
             virtual HTTP_SERVICE::S_PTR_HTTP_UTILITY &getHTTPUtility() = 0;
 
@@ -50,9 +53,6 @@ namespace FRAMEWORK
 
             // Returns Logger class singleton instance
             virtual LOGGER_SERVICE::S_PTR_LOGGER &getLogger() = 0;
-
-            // Returns DB Queue class singleton interface
-            virtual EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getDBQueueInterface() = 0;
 
             // Returns Logger Queue class singleton interface
             virtual EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getLoggerQueueInterface() = 0;
@@ -67,10 +67,10 @@ namespace FRAMEWORK
             NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE m_nwInterface = nullptr;
             DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE m_dbTableInterface = nullptr;
             DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE m_dbConnector = nullptr;
+            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_dbQueueInterface = nullptr;
             HTTP_SERVICE::S_PTR_HTTP_UTILITY m_HttpUtility = nullptr;
             HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER m_HttpSesssionManager = nullptr;
             LOGGER_SERVICE::S_PTR_LOGGER m_Logger = nullptr;
-            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_dbQueueInterface = nullptr;
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_loggerQueueInterface = nullptr;
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_loggerPendingQueueInterface = nullptr;
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_HTTPQueueInterface = nullptr;

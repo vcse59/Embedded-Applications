@@ -52,9 +52,7 @@ namespace NetworkClass
 
             std::shared_ptr<std::thread> mHttpThread = nullptr;
             std::mutex mMutex;
-            std::condition_variable mNotifyConsumer;
-            std::condition_variable mNotifyProducer;
-            bool readyToProcess = false;
+            std::condition_variable mNotifyHTTPThread;
             TCPServer(const TCPServer&) = delete;
             TCPServer& operator=(const TCPServer&) = delete;
             TCPServer(const TCPServer&&) = delete;

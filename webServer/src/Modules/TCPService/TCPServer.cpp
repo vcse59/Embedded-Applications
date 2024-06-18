@@ -21,7 +21,7 @@ TCPServer::TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumbe
 {
 	m_logger        =   logger;
 	mPortNumber     =   portNumber;
-    mHttpThread = std::make_shared<std::thread>(&NetworkClass::TCPServer::processHTTPMessage, this);
+    mHttpThread     = std::make_shared<std::thread>(&NetworkClass::TCPServer::processHTTPMessage, this);
     mHttpThread->detach();
 }
 
@@ -206,9 +206,8 @@ eSTATUS TCPServer::usePoll()
             LOGGER(m_logger) << "New client connected : " << new_socket << "from IP Address : " << inet_ntoa(address.sin_addr) << " Port : " << ntohs(address.sin_port) << std::endl;
 
         // Handle client request here
-        // Spawn a new thread to handle the connection
-        std::thread threadObject(&TCPServer::handle_connection, this, new_socket);
-        threadObject.detach();
+        // Add to HTTP Event Queue for further processing
+        handle_connection(new_socket);
         }
     }
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
@@ -294,10 +293,7 @@ void TCPServer::handle_connection(int client_socket) {
     event->setMessage(reinterpret_cast<char *>(&message), sizeof(message));
     queueInterface->pushEvent(event);
 
-    mNotifyConsumer.notify_one(); // notify all waiting threads
-    readyToProcess = true;
-    while (readyToProcess)
-        mNotifyProducer.wait(lck);
+    mNotifyHTTPThread.notify_all(); // notify all waiting threads
 }
 
 void TCPServer::startClient()
@@ -382,34 +378,28 @@ void* TCPServer::get_in_addr(struct sockaddr *sa){
 
 void TCPServer::processHTTPMessage()
 {
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getHTTPQueueInterface();
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        while (!readyToProcess)
-            mNotifyConsumer.wait(lck);
+        mNotifyHTTPThread.wait(lck, [&]
+                               { return (queueInterface->getQueueLength() > 0); });
+
+        std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
+        EVENT_MESSAGE::HTTPMessage *message = (EVENT_MESSAGE::HTTPMessage *)elem1->getEventData();
+
+        std::string receivedData;
 
         FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-        EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getHTTPQueueInterface();
-        while (queueInterface->getQueueLength() > 0)
-        {
-            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
-            EVENT_MESSAGE::HTTPMessage *message = (EVENT_MESSAGE::HTTPMessage *)elem1->getEventData();
 
-            std::string receivedData;
+        receiveMessage(message->socketId, receivedData);
 
-            FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+        HTTP_SERVICE::HttpParams params(m_logger, receivedData);
+        std::string http_response = consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
 
-            receiveMessage(message->socketId, receivedData);
+        sendMessage(message->socketId, http_response.c_str());
 
-            HTTP_SERVICE::HttpParams params(m_logger, receivedData);
-            std::string http_response = consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
-
-            sendMessage(message->socketId, http_response.c_str());
-
-            close(message->socketId);
-
-            mNotifyProducer.notify_one();
-            readyToProcess = false;
-        }
+        close(message->socketId);
     }
 }

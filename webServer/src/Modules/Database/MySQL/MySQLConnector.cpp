@@ -1,20 +1,21 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include<unistd.h>
+#include <unistd.h>
+#include <string>
 
 #include "Modules/ConsoleMain.h"
 
 using namespace DATABASE_SERVICE;
 using namespace std;
 
-MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger)
+MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger) : m_logger(logger)
 {
     m_DbName            = "Test1";
-    m_RemotePort        = 3306;
-    m_SqlRemoteIP       = "192.168.6.230";
-    m_DbUserName        = "test";
-    m_DbUserPassword    = "Test@143";
+    m_RemotePort        = COMMON_DEFINITIONS::MYSQL_SERVER_PORT;
+    m_SqlRemoteIP       = COMMON_DEFINITIONS::MYSQL_SERVER_IP;
+    m_DbUserName        = COMMON_DEFINITIONS::MYSQL_USERNAME;
+    m_DbUserPassword    = COMMON_DEFINITIONS::MYSQL_PASSWORD;
     m_TableName         = "UserData";
     m_AccessTokenTable  = "AccessTokenTable";
     m_UserTableName     = "UserTable";
@@ -40,10 +41,12 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
     // Connect to MySQL server
     COMMON_DEFINITIONS::eSTATUS status = connectToDBService();
 
-    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS){
+    if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+    {
         LOGGER(m_logger) << "Connected to MySQL" << std::endl;
     }
-    else{
+    else
+    {
         LOGGER(m_logger) << "Unable to connect to Mysql server on -> " << m_SqlRemoteIP << " at port -> " << m_RemotePort << std::endl;
         LOGGER(m_logger) << "Please check the database configuration parameters" << std::endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
@@ -66,7 +69,6 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
-    
     // Define table name
     std::string tableName = m_TableName;
 
@@ -90,7 +92,8 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
     {
         LOGGER(m_logger) << "Table " << tableName << " already exists " << std::endl;
     }
-    else{
+    else
+    {
         LOGGER(m_logger) << "Unable to create table " << tableName << std::endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
@@ -139,8 +142,13 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
+    // Disable auto commit
+    m_DBconnection->setAutoCommit(false);
+
     m_DBThread = std::make_shared<std::thread>(&MySQLConnector::processDBEvents, this);
+    m_CommitThread = std::make_shared<std::thread>(&MySQLConnector::commitDBTransaction, this);
     m_DBThread->detach();
+    m_CommitThread->detach();
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
@@ -149,21 +157,35 @@ void MySQLConnector::processDBEvents()
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getDBQueueInterface();
 
-
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        while (!readyToProcess)
-            mNotifyConsumer.wait(lck);
+        mNotifyDBThread.wait(lck, [&]
+                             { return queueInterface->getQueueLength() > 0; });
 
-        while (queueInterface->getQueueLength() > 0){
-            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
-            EVENT_MESSAGE::DBMessage* message = (EVENT_MESSAGE::DBMessage*)elem1->getEventData();
+        mLastQueryTime = std::chrono::system_clock::now();
+        std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
+        EVENT_MESSAGE::DBMessage *message = (EVENT_MESSAGE::DBMessage *)elem1->getEventData();
 
-            COMMON_DEFINITIONS::eSTATUS status = executeQuery(message->mTableName, message->mQueryString, message->mQueryType);
-            mNotifyProducer.notify_one();
-            readyToProcess = false;
+        COMMON_DEFINITIONS::eSTATUS status = executeQuery(message->mTableName, message->mQueryString, message->mQueryType);
+
+    }
+}
+
+void MySQLConnector::commitDBTransaction()
+{
+    while (true)
+    {
+        std::chrono::duration<double> diff = std::chrono::system_clock::now() - mLastQueryTime;
+        if (diff.count() > 5 && mRecordCount > 0)
+        {
+            std::unique_lock<std::mutex> lck(mMutex);
+            m_DBconnection->commit();
+            mLastQueryTime = std::chrono::system_clock::now();
+            mRecordCount = 0;
         }
+        else
+            std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 }
 
@@ -181,7 +203,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::connectToDBService()
 
         m_DBconnection = m_DBdriver->connect(remoteURL, m_DbUserName, m_DbUserPassword);
     }
-    catch(sql::SQLException& e)
+    catch (sql::SQLException &e)
     {
         cout << "# ERR: SQLException in " << __FILE__;
         cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
@@ -190,7 +212,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::connectToDBService()
         cout << ", SQLState: " << e.getSQLState() << " )" << endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
-    
+
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
@@ -200,16 +222,17 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::createDataBase(std::string dbName)
     try
     {
         status = isDataBaseExists(dbName);
-        
+
         if (status == COMMON_DEFINITIONS::eSTATUS::ERROR)
             throw sql::SQLException("Error in communicating with DB " + dbName);
-        
+
         if (status == COMMON_DEFINITIONS::eSTATUS::EXISTS)
         {
             m_DbName = dbName;
         }
 
-        if (status == COMMON_DEFINITIONS::eSTATUS::NOT_FOUND){
+        if (status == COMMON_DEFINITIONS::eSTATUS::NOT_FOUND)
+        {
             sql::SQLString statement = sql::SQLString("CREATE DATABASE ");
             statement += sql::SQLString(dbName);
             m_PrepStatement = m_DBconnection->prepareStatement(statement);
@@ -244,33 +267,27 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::createTable(std::string tableName, s
     return status;
 }
 
-COMMON_DEFINITIONS::eSTATUS MySQLConnector::executeQuery(std::string tableName, 
-                                                        std::string queryString,
-                                                        COMMON_DEFINITIONS::eQUERY_TYPE queryType)
+COMMON_DEFINITIONS::eSTATUS MySQLConnector::executeQuery(std::string tableName,
+                                                         std::string queryString,
+                                                         COMMON_DEFINITIONS::eQUERY_TYPE queryType)
 {
-    //std::lock_guard<std::mutex> lock(m_Mutex);
+    // std::lock_guard<std::mutex> lock(m_Mutex);
     COMMON_DEFINITIONS::eSTATUS status = COMMON_DEFINITIONS::eSTATUS::SUCCESS;
     try
     {
-        status = isTableExists(tableName);
-        if (status == COMMON_DEFINITIONS::eSTATUS::EXISTS)
+        switch (queryType)
         {
-            LOGGER(m_logger) << tableName << " exists exists in " << m_DbName << endl;
-            return status;
-        }
-
-        switch(queryType){
-            case    COMMON_DEFINITIONS::eQUERY_TYPE::DATA_DEFINITION:
-                status = processDDLQuery(queryString);
-                break;
-             case    COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION:
-                status = processDMLQuery(queryString);
-                break;
-            case    COMMON_DEFINITIONS::eQUERY_TYPE::DATA_QUERY:
-                status = processDQLQuery(queryString);
-                break;
-            case    COMMON_DEFINITIONS::eQUERY_TYPE::UNKNOWN_QUERY:
-                throw sql::SQLException("Invalid Query type enumeration");
+        case COMMON_DEFINITIONS::eQUERY_TYPE::DATA_DEFINITION:
+            status = processDDLQuery(queryString);
+            break;
+        case COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION:
+            status = processDMLQuery(queryString);
+            break;
+        case COMMON_DEFINITIONS::eQUERY_TYPE::DATA_QUERY:
+            status = processDQLQuery(queryString);
+            break;
+        case COMMON_DEFINITIONS::eQUERY_TYPE::UNKNOWN_QUERY:
+            throw sql::SQLException("Invalid Query type enumeration");
         }
     }
     catch (sql::SQLException &e)
@@ -288,8 +305,8 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::executeQuery(std::string tableName,
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDDLQuery(std::string queryString)
 {
-    //LOGGER(m_logger) << queryString << std::endl;
-    sql::Statement* createStatement = m_DBconnection->createStatement();
+    // LOGGER(m_logger) << queryString << std::endl;
+    sql::Statement *createStatement = m_DBconnection->createStatement();
     try
     {
         createStatement->execute("USE " + m_DbName);
@@ -319,11 +336,14 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDDLQuery(std::string queryStr
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDMLQuery(std::string queryString)
 {
-    sql::Statement* createStatement = m_DBconnection->createStatement();
+    m_PrepStatement = m_DBconnection->prepareStatement(sql::SQLString(queryString));
     try
     {
-        createStatement->execute("USE " + m_DbName);
-        createStatement->executeUpdate(queryString);
+        m_PrepStatement->executeUpdate();
+        mRecordCount++;
+
+        if (mRecordCount % BATCH_SIZE == 0)
+            m_DBconnection->commit();
     }
     catch (sql::SQLException &e)
     {
@@ -332,18 +352,20 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDMLQuery(std::string queryStr
         cout << "# ERR: " << e.what();
         cout << " (MySQL error code: " << e.getErrorCode();
         cout << ", SQLState: " << e.getSQLState() << " )" << endl;
-        delete createStatement;
+        delete m_PrepStatement;
+        m_PrepStatement = nullptr;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
-    delete createStatement;
+    delete m_PrepStatement;
+    m_PrepStatement = nullptr;
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDQLQuery(std::string queryString)
 {
-    sql::Statement* createStatement = m_DBconnection->createStatement();
-    sql::ResultSet* resultSet = nullptr;
+    sql::Statement *createStatement = m_DBconnection->createStatement();
+    sql::ResultSet *resultSet = nullptr;
     try
     {
         createStatement->execute("USE " + m_DbName);
@@ -352,17 +374,18 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDQLQuery(std::string queryStr
 
         // Get the number of columns in the result set
         int numColumns = resultSet->getMetaData()->getColumnCount();
-        
+
         // Process the ResultSet
-        while (resultSet->next()) {
+        while (resultSet->next())
+        {
             // Iterate over each column in the current row
-            for (int i = 1; i <= numColumns; ++i) {
+            for (int i = 1; i <= numColumns; ++i)
+            {
                 // Retrieve data from the current row and column
                 cout << resultSet->getString(i) << "\t"; // You can use appropriate getXXX() methods based on the column data type
             }
             cout << endl; // Move to the next line for the next row
         }
-
     }
     catch (sql::SQLException &e)
     {
@@ -385,16 +408,16 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDQLQuery(std::string queryStr
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::isDataBaseExists(std::string dbName)
 {
-    sql::Statement* createStatement = m_DBconnection->createStatement();
-    sql::ResultSet* resultSet = nullptr;
+    sql::Statement *createStatement = m_DBconnection->createStatement();
+    sql::ResultSet *resultSet = nullptr;
     COMMON_DEFINITIONS::eSTATUS status = COMMON_DEFINITIONS::eSTATUS::SUCCESS;
     try
-    {    
+    {
         // Execute the SQL query to check if the database exists
         resultSet = createStatement->executeQuery("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"" + dbName + "\"");
 
         // Check if a row is returned (database exists)
-        if (! (resultSet->next()))
+        if (!(resultSet->next()))
             status = COMMON_DEFINITIONS::eSTATUS::NOT_FOUND;
         else
             status = COMMON_DEFINITIONS::eSTATUS::EXISTS;
@@ -413,7 +436,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::isDataBaseExists(std::string dbName)
 
         if (resultSet != nullptr)
             delete resultSet;
-        delete createStatement;   
+        delete createStatement;
         status = COMMON_DEFINITIONS::eSTATUS::ERROR;
         return status;
     }
@@ -426,21 +449,24 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::isDataBaseExists(std::string dbName)
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::isTableExists(std::string tableName)
 {
-    sql::Statement* createStatement = m_DBconnection->createStatement();
-    sql::ResultSet* resultSet = nullptr;
+    sql::Statement *createStatement = m_DBconnection->createStatement();
+    sql::ResultSet *resultSet = nullptr;
     try
-    {    
+    {
         // Execute the SQL query to check if the database exists
         resultSet = createStatement->executeQuery("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \"" + tableName + "\"");
 
         // Check if a row is returned (table exists)
-        if (resultSet->next()) {
+        if (resultSet->next())
+        {
             delete resultSet;
-            delete createStatement; 
+            delete createStatement;
             return COMMON_DEFINITIONS::eSTATUS::EXISTS;
-        }else{
+        }
+        else
+        {
             delete resultSet;
-            delete createStatement; 
+            delete createStatement;
             return COMMON_DEFINITIONS::eSTATUS::NOT_FOUND;
         }
     }
@@ -453,27 +479,27 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::isTableExists(std::string tableName)
         cout << ", SQLState: " << e.getSQLState() << " )" << endl;
         if (resultSet != nullptr)
             delete resultSet;
-        delete createStatement;        
+        delete createStatement;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
     if (resultSet != nullptr)
         delete resultSet;
-    delete createStatement;        
+    delete createStatement;
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
-COMMON_DEFINITIONS::eSTATUS MySQLConnector::loadAccessToken(std::unordered_set<std::string>& accessToken)
+COMMON_DEFINITIONS::eSTATUS MySQLConnector::loadAccessToken(std::unordered_set<std::string> &accessToken)
 {
     std::string fetchQuery = "SELECT ACCESSTOKENID from " + m_AccessTokenTable;
 
     // Clear the exisiting access Token
     accessToken.clear();
 
-    sql::Statement* createStatement = m_DBconnection->createStatement();
-    sql::ResultSet* resultSet = nullptr;
+    sql::Statement *createStatement = m_DBconnection->createStatement();
+    sql::ResultSet *resultSet = nullptr;
     try
-    {    
+    {
         // Execute the SQL query to check if the database exists
         resultSet = createStatement->executeQuery(fetchQuery);
 
@@ -492,12 +518,12 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::loadAccessToken(std::unordered_set<s
         cout << ", SQLState: " << e.getSQLState() << " )" << endl;
         if (resultSet != nullptr)
             delete resultSet;
-        delete createStatement;        
+        delete createStatement;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
     if (resultSet != nullptr)
         delete resultSet;
-    delete createStatement;        
+    delete createStatement;
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }

@@ -36,7 +36,5 @@ namespace LOGGER_SERVICE
 	    public:
 		std::string getLogLevelString(LOGGER_SERVICE::eLOG_LEVEL_ENUM pLogLevel);
 	};
-
-	#define LOG_FILE_NAME	"applicationLog.txt"
 }
 #endif /* LogLevel_h */

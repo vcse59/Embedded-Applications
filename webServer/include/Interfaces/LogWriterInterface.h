@@ -27,9 +27,7 @@ namespace LOGGER_SERVICE{
         std::shared_ptr<std::thread> mLogThread = nullptr;
         std::ostream *outObject = nullptr;
         std::mutex mMutex;
-        std::condition_variable mNotifyConsumer;
-        std::condition_variable mNotifyProducer;
-        bool readyToProcess = false;
+        std::condition_variable mNotifyLoggerThread;
         virtual void processLogMessage();
     };
 

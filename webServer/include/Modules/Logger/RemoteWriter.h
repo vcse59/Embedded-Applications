@@ -30,7 +30,7 @@ namespace LOGGER_SERVICE
     {
     public:
         RemoteWriter(std::string loggerServiceIP, unsigned int portNumber)
-            : RemoteWriter::LogWriterInterface(std::bind(&RemoteWriter::processLogMessage, this)), mPortNumber{portNumber}, mServerIPAddress(loggerServiceIP)
+            : RemoteWriter::LogWriterInterface(std::bind(&RemoteWriter::processLogEvents, this)), mPortNumber{portNumber}, mServerIPAddress(loggerServiceIP)
         {
             mRetryThread = std::make_shared<std::thread>(&RemoteWriter::retryConnection, this);
             mRetryThread->detach();
@@ -42,13 +42,15 @@ namespace LOGGER_SERVICE
         COMMON_DEFINITIONS::eSTATUS connectToRemoteLogServer();
         COMMON_DEFINITIONS::eSTATUS sendMessage(const std::string &message);
         COMMON_DEFINITIONS::eSTATUS closeSocket();
-        void processLogMessage() override;
+        void processLogEvents();
 
     private:
         int mClientSocket = {-1};
         std::string mServerIPAddress;
         unsigned int mPortNumber;
         std::shared_ptr<std::thread> mRetryThread;
+        std::condition_variable mRetryCV;
+        std::mutex mRetryMutex;
 
         void retryConnection();
     };

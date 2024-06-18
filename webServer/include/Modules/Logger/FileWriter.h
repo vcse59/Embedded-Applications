@@ -8,10 +8,10 @@ namespace LOGGER_SERVICE
     class FileWriter : public LOGGER_SERVICE::LogWriterInterface
     {
     public:
-        FileWriter(const std::string logFileName = LOG_FILE_NAME)
+        FileWriter(const std::string logFileName = COMMON_DEFINITIONS::LOG_FILE_NAME)
         {
             fp = new std::ofstream();
-            fp->open(LOG_FILE_NAME);
+            fp->open(logFileName);
             set(fp);
         }
         ~FileWriter()

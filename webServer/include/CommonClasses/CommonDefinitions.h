@@ -27,12 +27,11 @@
 #define STRING_SIZE    10 * 1024
 
 #define MAX_BUFFER_SIZE (STRING_SIZE + 1024)
-#define SERVER_PORT 9999
-#define LOG_REMOTE_PORT 10000
 
 #define MAX_HEADER_SIZE 2048
 #define MAX_BODY_SIZE   8192
 #define SERVER_LISTENDER_TIMEOUT_IN_MS 1
+#define BATCH_SIZE 1000
 
 namespace COMMON_DEFINITIONS
 {
@@ -67,5 +66,14 @@ namespace COMMON_DEFINITIONS
         SESSION_DELETED     = 4,
         SESSION_VALID       = 5
     };
+
+    constexpr unsigned int  WEB_SERVER_PORT     = <WEB_SERVER_PORT>; // 9999
+    constexpr const char    LOG_SERVER_IP[]     = <LOG_SERVER_IP>;
+    constexpr unsigned int  LOG_SERVER_PORT     = <LOG_SERVER_PORT>; //10000;
+    constexpr const char    LOG_FILE_NAME[]     = "applicationLog.txt";
+    constexpr const char    MYSQL_SERVER_IP[]   = <MYSQL_SERVER_IP>;
+    constexpr unsigned int  MYSQL_SERVER_PORT   = <MYSQL_SERVER_PORT>; //3306;
+    constexpr const char    MYSQL_USERNAME[]    = <MYSQL_USERNAME>;
+    constexpr const char    MYSQL_PASSWORD[]    = <MYSQL_PASSWORD>;
 }
 #endif

@@ -67,27 +67,22 @@ COMMON_DEFINITIONS::eSTATUS RemoteWriter::closeSocket()
     if (mClientSocket != -1)
         close(mClientSocket);
     mClientSocket = -1;
+    std::unique_lock<std::mutex> lck(mRetryMutex);
+    mRetryCV.notify_one();
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
-void RemoteWriter::processLogMessage()
+void RemoteWriter::processLogEvents()
 {
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getLoggerQueueInterface();
+    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE pendingQueueInterface = consoleApp->getLoggerPendingQueueInterface();
+
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        while (!readyToProcess)
-            mNotifyConsumer.wait(lck);
-
-        FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-        EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getLoggerQueueInterface();
-        EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE pendingQueueInterface = consoleApp->getLoggerPendingQueueInterface();
-
-        while (pendingQueueInterface->getQueueLength() > 0 && mClientSocket != -1)
-        {
-            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> pendingEventMessage = pendingQueueInterface->getEvent();
-            EVENT_MESSAGE::LoggerMessage *pendingMessage = (EVENT_MESSAGE::LoggerMessage *)pendingEventMessage->getEventData();
-            sendMessage(std::string(pendingMessage->mLoggerString));
-        }
+        mNotifyLoggerThread.wait(lck, [&]
+                                 { return (queueInterface->getQueueLength() > 0); });
 
         while (queueInterface->getQueueLength() > 0)
         {
@@ -107,33 +102,33 @@ void RemoteWriter::processLogMessage()
                 pendingQueueInterface->pushEvent(event);
             }
         }
-        mNotifyProducer.notify_one();
-        readyToProcess = false;
     }
 }
 
 void RemoteWriter::retryConnection()
 {
     while(true){
-        if (mClientSocket == -1){
-            if (connectToRemoteLogServer() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+
+        std::unique_lock<std::mutex> lck(mRetryMutex);
+        mRetryCV.wait(lck, [&]{return (mClientSocket == -1);});
+
+        if (connectToRemoteLogServer() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+        {
+            std::cout << "Retrying to connect again in 5 secs to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl; 
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+        }else{
+            std::cout << "Successfully connected to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl;
+
+            std::unique_lock<std::mutex> lck(mMutex);
+
+            FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE pendingQueueInterface = consoleApp->getLoggerPendingQueueInterface();
+
+            while (pendingQueueInterface->getQueueLength() > 0)
             {
-                std::cout << "Retrying to connect again in 5 secs to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl; 
-                std::this_thread::sleep_for(std::chrono::seconds(5));
-            }else{
-                std::cout << "Successfully connected to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl;
-
-                std::unique_lock<std::mutex> lck(mMutex);
-
-                FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-                EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE pendingQueueInterface = consoleApp->getLoggerPendingQueueInterface();
-
-                while (pendingQueueInterface->getQueueLength() > 0)
-                {
-                    std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> pendingEventMessage = pendingQueueInterface->getEvent();
-                    EVENT_MESSAGE::LoggerMessage *pendingMessage = (EVENT_MESSAGE::LoggerMessage *)pendingEventMessage->getEventData();
-                    sendMessage(std::string(pendingMessage->mLoggerString));
-                }
+                std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> pendingEventMessage = pendingQueueInterface->getEvent();
+                EVENT_MESSAGE::LoggerMessage *pendingMessage = (EVENT_MESSAGE::LoggerMessage *)pendingEventMessage->getEventData();
+                sendMessage(std::string(pendingMessage->mLoggerString));
             }
         }
     }
