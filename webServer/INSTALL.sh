@@ -2,7 +2,7 @@
 
 source CONFIG.sh
 
-buildType="Debug";
+buildType="Release";
 
 if [ -n "$1" ]; then
     buildType=$1
@@ -29,6 +29,16 @@ if [ ! -d "$CMAKE_CLIENT" ]; then
 	fi
 fi
 
+if [ ! -d "$CMAKE_LOGGER" ]; then
+	# Create server cmake directory
+	mkdir -p "$CMAKE_LOGGER"
+
+	# Create the directory
+	if [ $? -eq 0 ]; then
+    		echo "Directory '$CMAKE_LOGGER' created successfully."
+	fi
+fi
+
 # Change to server directory and run cmake command
 echo "Building $buildType server......"
 cd "$CMAKE_SERVER"
@@ -50,6 +60,17 @@ else
 fi
 make
 
+# Change to client directory and run cmake command
+cd ../../
+echo "Building $buildType loggerServer......"
+cd "$CMAKE_LOGGER"
+if [ "$buildType" = "Debug" ]; then
+    cmake -DCMAKE_BUILD_TYPE=Debug -D EXECUTABLE_NAME="$LOGGER_SERVER_APP_NAME" "../../$CMAKE_LOGGER_SERVER_FILE"
+else
+    cmake -DCMAKE_BUILD_TYPE=Release -D EXECUTABLE_NAME="$LOGGER_SERVER_APP_NAME" "../../$CMAKE_LOGGER_SERVER_FILE"
+fi
+make
+
 # Copy the binaries to bin directory
 cd ../../
 
@@ -64,4 +85,5 @@ mkdir -p "$BINARY_PATH"
 
 cp "$SERVER_EXECUTABLE_PATH" "$BINARY_PATH"/
 cp "$CLIENT_EXECUTABLE_PATH" "$BINARY_PATH"/
+cp "$LOGGER_SERVER_EXECUTABLE_PATH" "$BINARY_PATH"/
 cp -r "$WEB_FILE_PATH" "$BINARY_PATH"/

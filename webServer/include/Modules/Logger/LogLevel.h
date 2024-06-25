@@ -25,10 +25,11 @@ namespace LOGGER_SERVICE
 	enum eLOG_LEVEL_ENUM
 	{
 	    NONE         =   0,
-	    ERROR_LOG    =   1,
-	    WARNING_LOG  =   2,
-	    INFO_LOG     =   3,
-	    DEBUG_LOG    =   4
+	    ERROR_LOG    =   NONE + 1,
+	    WARNING_LOG  =   ERROR_LOG + 1,
+	    INFO_LOG     =   WARNING_LOG + 1,
+	    DEBUG_LOG    =   INFO_LOG + 1,
+		ALL_LOG		 = 	 DEBUG_LOG + 1
 	};
 
 	class LogLevel

@@ -43,12 +43,12 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
 
     if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
     {
-        LOGGER(m_logger) << "Connected to MySQL" << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Connected to MySQL" << std::endl;
     }
     else
     {
-        LOGGER(m_logger) << "Unable to connect to Mysql server on -> " << m_SqlRemoteIP << " at port -> " << m_RemotePort << std::endl;
-        LOGGER(m_logger) << "Please check the database configuration parameters" << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Unable to connect to Mysql server on -> " << m_SqlRemoteIP << " at port -> " << m_RemotePort << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Please check the database configuration parameters" << std::endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
@@ -57,15 +57,15 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
 
     if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
     {
-        LOGGER(m_logger) << "DB " << m_DbName << " Created Successfully" << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "DB " << m_DbName << " Created Successfully" << std::endl;
     }
     else if (status == COMMON_DEFINITIONS::eSTATUS::EXISTS)
     {
-        LOGGER(m_logger) << "DB " << m_DbName << " already exists" << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "DB " << m_DbName << " already exists" << std::endl;
     }
     else
     {
-        LOGGER(m_logger) << "DB Creation failed" << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "DB Creation failed" << std::endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
@@ -86,15 +86,15 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
     status = createTable(tableName, createTableQuery);
     if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
     {
-        LOGGER(m_logger) << "Table " << tableName << " created successfully " << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Table " << tableName << " created successfully " << std::endl;
     }
     else if (status == COMMON_DEFINITIONS::eSTATUS::EXISTS)
     {
-        LOGGER(m_logger) << "Table " << tableName << " already exists " << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Table " << tableName << " already exists " << std::endl;
     }
     else
     {
-        LOGGER(m_logger) << "Unable to create table " << tableName << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Unable to create table " << tableName << std::endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
@@ -108,15 +108,15 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
     status = createTable(tableName, createTableQuery);
     if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
     {
-        LOGGER(m_logger) << "Table " << tableName << " created successfully " << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Table " << tableName << " created successfully " << std::endl;
     }
     else if (status == COMMON_DEFINITIONS::eSTATUS::EXISTS)
     {
-        LOGGER(m_logger) << "Table " << tableName << " already exists " << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Table " << tableName << " already exists " << std::endl;
     }
     else
     {
-        LOGGER(m_logger) << "Unable to create table " << tableName << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Unable to create table " << tableName << std::endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
@@ -130,15 +130,15 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
     status = createTable(tableName, createTableQuery);
     if (status == COMMON_DEFINITIONS::eSTATUS::SUCCESS)
     {
-        LOGGER(m_logger) << "Table " << tableName << " created successfully " << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Table " << tableName << " created successfully " << std::endl;
     }
     else if (status == COMMON_DEFINITIONS::eSTATUS::EXISTS)
     {
-        LOGGER(m_logger) << "Table " << tableName << " already exists " << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Table " << tableName << " already exists " << std::endl;
     }
     else
     {
-        LOGGER(m_logger) << "Unable to create table " << tableName << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Unable to create table " << tableName << std::endl;
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
@@ -305,7 +305,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::executeQuery(std::string tableName,
 
 COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDDLQuery(std::string queryString)
 {
-    // LOGGER(m_logger) << queryString << std::endl;
+    LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << queryString << std::endl;
     sql::Statement *createStatement = m_DBconnection->createStatement();
     try
     {
@@ -314,7 +314,7 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::processDDLQuery(std::string queryStr
         bool isSuccess = createStatement->execute(queryString);
 
         if (isSuccess == true)
-            LOGGER(m_logger) << "Query String " << queryString << " is executed successfully" << endl;
+            LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Query String " << queryString << " is executed successfully" << endl;
     }
     catch (sql::SQLException &e)
     {

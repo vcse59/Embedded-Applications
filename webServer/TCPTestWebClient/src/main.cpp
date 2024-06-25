@@ -7,7 +7,7 @@
 #include <future>
 #include <termios.h>
 
-#include "Modules/TCPService/TCPClient.h"
+#include "TCPClient.h"
 
 using namespace std;
 using namespace NetworkClass;

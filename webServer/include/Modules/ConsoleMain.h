@@ -14,7 +14,6 @@
 // Include header files
 #include "Adapters/ConsoleAppInterface.h"
 #include "Modules/TCPService/TCPServer.h"
-#include "Modules/TCPService/TCPClient.h"
 #include "Modules/Logger/Logger.h"
 #include "Modules/EventMessage/LoggerEventQueue.h"
 #include "Modules/EventMessage/HTTPEventQueue.h"
@@ -74,7 +73,7 @@ namespace FRAMEWORK
                 // Initialize the queue for db
                 if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
                 {
-                    LOGGER(logger) << "Failed to initialize DB queue" << std::endl;
+                    LOGGER(logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Failed to initialize DB queue" << std::endl;
                     return status;
                 }
 
@@ -83,7 +82,7 @@ namespace FRAMEWORK
                 // Initialize the Database
                 if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
                 {
-                    LOGGER(logger) << "Initializing DB is failed...Exiting the program" << std::endl;
+                    LOGGER(logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Initializing DB is failed...Exiting the program" << std::endl;
                     return status;
                 }
 
@@ -96,14 +95,14 @@ namespace FRAMEWORK
                 // Initialize the queue for HTTP
                 if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
                 {
-                    LOGGER(logger) << "Failed to initialize HTTPEvent queue" << std::endl;
+                    LOGGER(logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Failed to initialize HTTPEvent queue" << std::endl;
                     return status;
                 }
 
                 // Load the Access Token Data
                 if (httpSessionManager->init() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
                 {
-                    LOGGER(logger) << "Failed to load access Token Data" << std::endl;
+                    LOGGER(logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Failed to load access Token Data" << std::endl;
                     return COMMON_DEFINITIONS::eSTATUS::ERROR;
                 }
                 return status;

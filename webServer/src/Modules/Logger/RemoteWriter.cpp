@@ -21,11 +21,12 @@ COMMON_DEFINITIONS::eSTATUS RemoteWriter::connectToRemoteLogServer()
     // Connect to server
     if (connect(mClientSocket, (struct sockaddr *)&ServerAddress, sizeof(ServerAddress)) == -1)
     {
+        std::cout << "Connect failed" << std::endl;
         closeSocket();
         return COMMON_DEFINITIONS::eSTATUS::SOCKET_INITIALIZATION_FAILED;
     }
 
-    std::cout << "Connection to server : " << mServerIPAddress << " at PORT : " << mPortNumber << " is CONNECTED" << std::endl;
+    std::cout << "Connected to server : " << mServerIPAddress << " at PORT : " << mPortNumber << " is CONNECTED" << std::endl;
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
@@ -67,8 +68,6 @@ COMMON_DEFINITIONS::eSTATUS RemoteWriter::closeSocket()
     if (mClientSocket != -1)
         close(mClientSocket);
     mClientSocket = -1;
-    std::unique_lock<std::mutex> lck(mRetryMutex);
-    mRetryCV.notify_one();
     return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
 }
 
@@ -88,8 +87,13 @@ void RemoteWriter::processLogEvents()
         {
             std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
             EVENT_MESSAGE::LoggerMessage *message = (EVENT_MESSAGE::LoggerMessage *)elem1->getEventData();
-            if (mClientSocket != -1){
-                sendMessage(std::string(message->mLoggerString));
+            if (mClientSocket != -1)
+            {
+                if (sendMessage(std::string(message->mLoggerString)) != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    std::unique_lock<std::mutex> retryLock(mRetryMutex);
+                    mRetryCV.notify_one();
+                }
             }
             else{
                 std::cout << message->mLoggerString;
@@ -108,14 +112,16 @@ void RemoteWriter::processLogEvents()
 void RemoteWriter::retryConnection()
 {
     while(true){
-
         std::unique_lock<std::mutex> lck(mRetryMutex);
         mRetryCV.wait(lck, [&]{return (mClientSocket == -1);});
 
-        if (connectToRemoteLogServer() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+        std::cout << "Trying to reconnect again" << std::endl;
+        COMMON_DEFINITIONS::eSTATUS status = connectToRemoteLogServer();
+        if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
         {
             std::cout << "Retrying to connect again in 5 secs to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl; 
-            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            mRetryCV.notify_one();
         }else{
             std::cout << "Successfully connected to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl;
 

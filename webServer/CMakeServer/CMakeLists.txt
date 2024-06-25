@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.0)
 project(ThreadingProject)
 
+# Set the build type to Release
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 file(READ "/etc/issue" ETC_ISSUE)
 string(REGEX MATCH "Ubuntu" DIST ${ETC_ISSUE})
 
@@ -23,7 +28,7 @@ ExternalProject_Add(
     PREFIX ${CMAKE_BINARY_DIR}/thirdparty/jsoncpp
     GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
     GIT_TAG master  # Or specify the commit hash, branch, etc.
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=$ENV{CMAKE_BUILD_TYPE}
 )
 ExternalProject_Get_Property(jsoncpp SOURCE_DIR BINARY_DIR)
 

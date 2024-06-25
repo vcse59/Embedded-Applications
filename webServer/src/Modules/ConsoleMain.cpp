@@ -68,7 +68,7 @@ LOGGER_SERVICE::S_PTR_LOGGER& ConsoleMain::getLogger()
 {
     if (m_Logger == nullptr)
     {
-        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::FileWriter>());
+        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::RemoteWriter>(COMMON_DEFINITIONS::LOG_SERVER_IP, COMMON_DEFINITIONS::LOG_SERVER_PORT), LOGGER_SERVICE::eLOG_LEVEL_ENUM::ALL_LOG);
     }
     return m_Logger;
 }

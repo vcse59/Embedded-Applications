@@ -58,8 +58,8 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     dbConnector->notifyDBThread();
 
     std::string response;
-    LOGGER(m_logger) << "Processing Request : " << httpMethod << std::endl;
-    LOGGER(m_logger) << "Processing Resource URL : " << resourceURL << std::endl;
+    LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Processing Request : " << httpMethod << std::endl;
+    LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Processing Resource URL : " << resourceURL << std::endl;
 
     switch(HTTP_METHOD[httpMethod])
     {
@@ -71,7 +71,7 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
             response = processPost(httpParams);
             break;
         default:
-            LOGGER(m_logger) << "Invalid method type" << std::endl;
+            LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Invalid method type" << std::endl;
     }
 
     return response;
