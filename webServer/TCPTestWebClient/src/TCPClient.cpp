@@ -2,7 +2,7 @@
 #include <thread>
 #include <chrono>
 
-#include "Modules/TCPService/TCPClient.h"
+#include "TCPClient.h"
 
 using namespace NetworkClass;
 using namespace std;

@@ -14,7 +14,6 @@
 #include "Containers/Queue.h"
 #include "Modules/EventMessage/DBEventQueue.h"
 #include "Modules/EventMessage/DBEventMessage.h"
-
 using namespace std;
 using namespace NetworkClass;
 using namespace Storage;
@@ -69,9 +68,6 @@ int main(int argc, char *argv[])
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ntwkInteface = consoleApp->getTCPServer();
     
-    // Initialize the Database
-    DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbConnector = consoleApp->getDBInstance();    
-
     // Start a thread that waits for user input
     std::thread userThread(userInput, ntwkInteface);
 

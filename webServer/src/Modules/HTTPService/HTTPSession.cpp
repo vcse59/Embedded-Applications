@@ -34,16 +34,17 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
 
     std::string tableName = "UserData";
-    DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbConnector = consoleApp->getDBInstance();
     std::string encodedPayload  = httpUtility->base64_encode(httpParams.getHTTPRequest());
     std::string sessionID       = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
     std::string resourceURL     = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL);
     std::string httpMethod      = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD);
     std::string httpError       = httpParams.getError();
 
+    DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbConnector = consoleApp->getDBInstance();
     std::string insertQuery = "INSERT INTO " + tableName + " (USERID, SESSIONID, HTTPMETHOD, RESOURCEURL, DATARAW, HTTPERROR)  \
-        VALUES (\"" +  m_UserId + "\" , \"" +  sessionID + "\" , \"" + httpMethod + "\", \""  + resourceURL + "\", \"" + encodedPayload +
-        "\", \""  + httpError + "\")";
+        VALUES (\"" + m_UserId +
+                              "\" , \"" + sessionID + "\" , \"" + httpMethod + "\", \"" + resourceURL + "\", \"" + encodedPayload +
+                              "\", \"" + httpError + "\")";
 
     EVENT_MESSAGE::DBMessage message;
     strcpy(message.mQueryString , insertQuery.c_str());
@@ -56,11 +57,9 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     queueInterface->pushEvent(event);
     dbConnector->notifyDBThread();
 
-        // COMMON_DEFINITIONS::eSTATUS status = dbConnector->executeQuery(tableName, insertQuery, COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION);
-
-        std::string response;
-    LOGGER(m_logger) << "Processing Request : " << httpMethod << std::endl;
-    LOGGER(m_logger) << "Processing Resource URL : " << resourceURL << std::endl;
+    std::string response;
+    LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Processing Request : " << httpMethod << std::endl;
+    LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Processing Resource URL : " << resourceURL << std::endl;
 
     switch(HTTP_METHOD[httpMethod])
     {
@@ -72,7 +71,7 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
             response = processPost(httpParams);
             break;
         default:
-            LOGGER(m_logger) << "Invalid method type" << std::endl;
+            LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Invalid method type" << std::endl;
     }
 
     return response;

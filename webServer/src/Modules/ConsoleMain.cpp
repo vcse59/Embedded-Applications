@@ -13,7 +13,7 @@ NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPServer()
 {
     if (m_nwInterface == nullptr)
     {
-        m_nwInterface = std::make_shared<TCPServer>(getLogger(), SERVER_PORT);
+        m_nwInterface = std::make_shared<TCPServer>(getLogger(), COMMON_DEFINITIONS::WEB_SERVER_PORT);
     }
 
     return m_nwInterface;
@@ -37,6 +37,16 @@ DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE ConsoleMain::getDBInstance(
     return m_dbConnector;
 }
 
+EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &ConsoleMain::getDBQueueInterface()
+{
+    if (m_dbQueueInterface == nullptr)
+    {
+        m_dbQueueInterface = std::make_shared<EVENT_MESSAGE::DBEventQueue>();
+    }
+
+    return m_dbQueueInterface;
+}
+
 HTTP_SERVICE::S_PTR_HTTP_UTILITY& ConsoleMain::getHTTPUtility()
 {
     if (m_HttpUtility == nullptr){
@@ -58,19 +68,9 @@ LOGGER_SERVICE::S_PTR_LOGGER& ConsoleMain::getLogger()
 {
     if (m_Logger == nullptr)
     {
-        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::RemoteWriter>("127.0.0.1", LOG_REMOTE_PORT));
+        m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::RemoteWriter>(COMMON_DEFINITIONS::LOG_SERVER_IP, COMMON_DEFINITIONS::LOG_SERVER_PORT), LOGGER_SERVICE::eLOG_LEVEL_ENUM::ALL_LOG);
     }
     return m_Logger;
-}
-
-EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE& ConsoleMain::getDBQueueInterface()
-{
-    if (m_dbQueueInterface == nullptr)
-    {
-        m_dbQueueInterface = std::make_shared<EVENT_MESSAGE::DBEventQueue>();
-    }
-
-    return m_dbQueueInterface;
 }
 
 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &ConsoleMain::getLoggerQueueInterface()

@@ -18,8 +18,8 @@ COMMON_DEFINITIONS::eSTATUS HttpSessionManager::init()
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::addSession(std::string sessionId){
 
     std::lock_guard<std::mutex> lock(mMutex);
-    LOGGER(m_logger) << "Entering HttpSessionManager::addSession" << std::endl;
-    LOGGER(m_logger) << "Exiting HttpSessionManager::addSession" << std::endl;
+    LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Entering HttpSessionManager::addSession" << std::endl;
+    LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Exiting HttpSessionManager::addSession" << std::endl;
     return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_ADDED;
 }
 
@@ -54,25 +54,25 @@ std::string HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& htt
 
         if (m_AccessTokenInfo.find(bearerToken) == m_AccessTokenInfo.end())
         {
-            std::string errorMessage = "Invalid Bearer Token...Please pass the correct bearer token";  
-            LOGGER(m_logger) << errorMessage << std::endl;
+            std::string errorMessage = "Invalid Bearer Token...Please pass the correct bearer token";
+            LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << errorMessage << std::endl;
             return httpParams.generateErrorResponse(errorMessage);
         }
     }
     
     std::string cookie  = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_COOKIE);
     std::string hostUrl = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_HOST);
-    LOGGER(m_logger) << "Session Id Parsed : " << cookie << std::endl;
+    LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Session Id Parsed : " << cookie << std::endl;
 
     std::string requestID = cookie;
 
     HTTP_SESSION_MAP::iterator it = m_SessionInfo.find(requestID);
     HTTP_SERVICE::S_PTR_HTTP_SESSION sessionObject = nullptr;
     if (it != m_SessionInfo.end()){
-        LOGGER(m_logger) << "Session found for " << requestID << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Session found for " << requestID << std::endl;
         sessionObject = it->second;
     }else{
-        LOGGER(m_logger) << "Creating new session for " << requestID << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Creating new session for " << requestID << std::endl;
         sessionObject = std::make_shared<HttpSession>(m_logger, cookie, hostUrl);
         m_SessionInfo.insert(std::pair<std::string, S_PTR_HTTP_SESSION>(requestID, sessionObject));
     }

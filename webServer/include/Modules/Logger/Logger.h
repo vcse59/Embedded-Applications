@@ -23,9 +23,8 @@ namespace LOGGER_SERVICE
     class CustomLogBuf : public std::streambuf
     {
     public:
-        CustomLogBuf(LOGGER_SERVICE::LOG_WRITER_SHARED_PTR logWriteSharedPtr,
-                    LOGGER_SERVICE::eLOG_LEVEL_ENUM pAppLogLevel)
-            : mAppLogLevel(pAppLogLevel), m_LogWriter(logWriteSharedPtr)
+        CustomLogBuf(LOGGER_SERVICE::LOG_WRITER_SHARED_PTR logWriteSharedPtr)
+            : m_LogWriter(logWriteSharedPtr)
         {
         }
 
@@ -34,7 +33,13 @@ namespace LOGGER_SERVICE
             m_LogWriter = nullptr;
         }
 
-    protected:
+        void setLogLevelValid(bool isValidLogLevel)
+        {
+            mIsLogLevelValid = isValidLogLevel;
+        }
+
+        protected : 
+        
         int sync() override
         {
             std::lock_guard<std::mutex> lock(lMutex);
@@ -44,9 +49,11 @@ namespace LOGGER_SERVICE
             }
             if (!buffer_.empty())
             {
-                std::stringstream ss;
-                ss << getCurrentDateTime() << " " << mLogLevel.getLogLevelString(mAppLogLevel) << " " << buffer_;
-                m_LogWriter->write(ss.str());
+                if (mIsLogLevelValid){
+                    std::stringstream ss;
+                    ss << getCurrentDateTime() << " " << buffer_;
+                    m_LogWriter->write(ss.str());
+                }
                 buffer_.clear();
             }
             return 0;
@@ -85,7 +92,7 @@ namespace LOGGER_SERVICE
 
     protected:
         LOGGER_SERVICE::LOG_WRITER_SHARED_PTR m_LogWriter = nullptr;
-        LOGGER_SERVICE::LogLevel mLogLevel;
+        bool mIsLogLevelValid = false;
         std::mutex lMutex;
         LOGGER_SERVICE::eLOG_LEVEL_ENUM mAppLogLevel = LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG;
 
@@ -99,7 +106,7 @@ namespace LOGGER_SERVICE
         LoggerStream(LOGGER_SERVICE::LOG_WRITER_SHARED_PTR logPtr,
                      LOGGER_SERVICE::eLOG_LEVEL_ENUM pAppLogLevel = LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG,
                      LOGGER_SERVICE::LOG_OUTPUT loggerOutputEnum = LOGGER_SERVICE::LOG_OUTPUT::LOG_OUTPUT_CONSOLE)
-            : std::ostream(&buffer_), buffer_(logPtr, pAppLogLevel),mLoggerOutputEnum(loggerOutputEnum)
+            : mAppLogLevel(pAppLogLevel), std::ostream(&buffer_), buffer_(logPtr), mLoggerOutputEnum(loggerOutputEnum)
         {
         }
         ~LoggerStream() {
@@ -111,8 +118,20 @@ namespace LOGGER_SERVICE
             return *this;
         }
 
+        LoggerStream& operator<<(LOGGER_SERVICE::eLOG_LEVEL_ENUM logLevel)
+        {
+            if (logLevel <= mAppLogLevel){
+                buffer_.setLogLevelValid(true);
+                *this << mLogLevel.getLogLevelString(logLevel) << " ";
+            }else
+                buffer_.setLogLevelValid(false);
+            return *this;
+        }
+
     private:
         LOGGER_SERVICE::CustomLogBuf buffer_;
+        LOGGER_SERVICE::LogLevel mLogLevel;
+        LOGGER_SERVICE::eLOG_LEVEL_ENUM mAppLogLevel;
         LOGGER_SERVICE::LOG_OUTPUT mLoggerOutputEnum = LOGGER_SERVICE::LOG_OUTPUT::LOG_OUTPUT_CONSOLE;
     };
     typedef std::shared_ptr<LOGGER_SERVICE::LoggerStream> S_PTR_LOGGER;

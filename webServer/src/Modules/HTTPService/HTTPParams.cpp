@@ -152,9 +152,9 @@ void HttpParams::parse()
             auto headerIter = m_HeaderInfo.find(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD);
             if (headerIter == m_HeaderInfo.end())
             {
-                LOGGER(m_logger) << "HTTP Method is missing in request" << std::endl; 
+                LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::WARNING_LOG << "HTTP Method is missing in request" << std::endl;
                 m_HttpError = HTTP_SERVICE::eHTTP_ERROR::INVALID_HTTP_METHOD;
-                LOGGER(m_logger) << "Incorrect HTTP Method detected...Falling back to login page with GET Method" << std::endl;
+                LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::WARNING_LOG << "Incorrect HTTP Method detected...Falling back to login page with GET Method" << std::endl;
                 m_HeaderInfo.insert(std::pair<HTTP_SERVICE::eHEADER_FIELD, std::string>(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD, "GET"));
                 headerIter = m_HeaderInfo.find(HTTP_SERVICE::eHEADER_FIELD::HEADER_RESOURCE_URL);
                 std::string defaultResourceURL = "/login";
@@ -233,7 +233,7 @@ std::string HttpParams::generateCSSResponse(std::string resourceURL)
     if (pos != std::string::npos)
     {
         fileName = resourceURL.substr(pos, resourceURL.size() - pos);
-        LOGGER(m_logger) << "File name : " << fileName << std::endl;
+        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "File name : " << fileName << std::endl;
     }
 
     // Read css content

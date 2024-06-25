@@ -40,31 +40,23 @@ void LogWriterInterface::write(const std::string logMessage)
     event->setMessage(reinterpret_cast<char *>(&message), sizeof(message));
     queueInterface->pushEvent(event);
 
-    mNotifyConsumer.notify_one(); // notify all waiting threads
-    readyToProcess = true;
-    while (readyToProcess)
-        mNotifyProducer.wait(lck);
+    mNotifyLoggerThread.notify_all(); // notify all waiting threads
 }
 
 void LogWriterInterface::processLogMessage()
 {
+    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getLoggerQueueInterface();
+
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        while (!readyToProcess)
-            mNotifyConsumer.wait(lck);
+        mNotifyLoggerThread.wait(lck, [&]
+                                 { return (queueInterface->getQueueLength() > 0); });
 
-        FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-        EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getLoggerQueueInterface();
-        while (queueInterface->getQueueLength() > 0)
-        {
-            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
-            EVENT_MESSAGE::LoggerMessage *message = (EVENT_MESSAGE::LoggerMessage *)elem1->getEventData();
-            *outObject << message->mLoggerString;
-            outObject->flush();
-
-            mNotifyProducer.notify_one();
-            readyToProcess = false;
-        }
+        std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
+        EVENT_MESSAGE::LoggerMessage *message = (EVENT_MESSAGE::LoggerMessage *)elem1->getEventData();
+        *outObject << message->mLoggerString;
+        outObject->flush();
     }
 }
