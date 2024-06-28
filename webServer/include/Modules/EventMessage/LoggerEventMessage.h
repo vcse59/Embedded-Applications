@@ -15,7 +15,8 @@ namespace EVENT_MESSAGE
     {
     public:
         LoggerEventMessage() {}
-        ~LoggerEventMessage() {}
+        ~LoggerEventMessage() {
+        }
     };
 }
 

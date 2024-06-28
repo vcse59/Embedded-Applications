@@ -22,8 +22,19 @@ namespace LOGGER_SERVICE{
         virtual ~LogWriterInterface();
         virtual void write(const std::string logMessage);
         void set(std::ostream *os) { outObject = os; }
+        void stopLogger(){
+            std::unique_lock<std::mutex> lck(mMutex);
+            mNotifyLoggerThread.notify_one();
+        }
+        
+        void setCloseflag(bool closeFlag)
+        {
+            std::unique_lock<std::mutex> lck(mMutex);
+            mNeedToClose = closeFlag;
+        }
 
     protected:
+        bool mNeedToClose = false;
         std::shared_ptr<std::thread> mLogThread = nullptr;
         std::ostream *outObject = nullptr;
         std::mutex mMutex;

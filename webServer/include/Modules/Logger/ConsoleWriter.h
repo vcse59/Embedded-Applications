@@ -9,7 +9,8 @@ namespace LOGGER_SERVICE
     {
     public:
         ConsoleWriter() : LOGGER_SERVICE::LogWriterInterface(&std::cout) {}
-        ~ConsoleWriter() {}
+        ~ConsoleWriter() {
+        }
     };
 }
 

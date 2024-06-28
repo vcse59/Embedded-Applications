@@ -37,7 +37,6 @@ void HttpParams::generateCookieIfRequired()
 
 HttpParams::~HttpParams()
 {
-
 }
 
 std::string HttpParams::generateLogin(std::string errorMessage) {
@@ -62,7 +61,6 @@ std::string HttpParams::generateLogin(std::string errorMessage) {
     response << "Content-Length: " << index_html_content.size() << "\r\n\r\n";
     response << index_html_content;
 
-    //std::cout << "RESPONSE : " << response.str() << std::endl;
     return response.str();
 }
 
@@ -91,7 +89,6 @@ std::string HttpParams::generateHomePage() {
     response << "Content-Length: " << index_html_content.size() << "\r\n\r\n";
     response << index_html_content;
 
-    //std::cout << "RESPONSE : " << response.str() << std::endl;
     return response.str();
 }
 
@@ -255,6 +252,5 @@ std::string HttpParams::generateCSSResponse(std::string resourceURL)
         response << index_html_content;
     }
 
-    //std::cout << "RESPONSE : " << response.str() << std::endl;
     return response.str();
 }

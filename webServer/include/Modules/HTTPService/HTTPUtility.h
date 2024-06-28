@@ -12,7 +12,8 @@ namespace HTTP_SERVICE
         public:
 
             HTTPUtility(LOGGER_SERVICE::S_PTR_LOGGER logger):m_logger(logger){}
-            ~HTTPUtility(){}
+            ~HTTPUtility(){
+            }
             std::string generateSessionID();
             std::string readIndexHtml(const std::string& filename);
             std::string base64_encode(const std::string &input);

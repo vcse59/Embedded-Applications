@@ -29,7 +29,8 @@ namespace EVENT_MESSAGE
     {
         public:
             EventMessageInterface() {}
-            virtual ~EventMessageInterface() {}
+            virtual ~EventMessageInterface() {
+            }
             
             void packMessage(){
                 mData.setData(reinterpret_cast<char*> (&eventMsg), sizeof (eventMsg));
@@ -52,7 +53,7 @@ namespace EVENT_MESSAGE
                 return mData;
             };
 
-            void setMessage(Storage::SingleLLNode node){
+            void setMessage(Storage::SingleLLNode& node){
                 mData = node;
             }
 

@@ -15,8 +15,10 @@
 #define __CONSOLE_APP_INTERFACE_H__
 
 // Include header files
+#ifdef _ENABLE_DB_
 #include "Interfaces/DataBaseTableInterface.h"
 #include "Interfaces/DataBaseConnectorInterface.h"
+#endif
 #include "Interfaces/NetworkClassInterface.h"
 #include "Interfaces/EventQueueInterface.h"
 #include "Modules/HTTPService/HTTPUtility.h"
@@ -31,20 +33,19 @@ namespace FRAMEWORK
             ConsoleAppInterface(){}
 
             // Destructor
-            virtual ~ConsoleAppInterface(){}
+            virtual ~ConsoleAppInterface(){
+            }
 
             // Returns NetworkClassInterface class singleton instance
             virtual NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPServer() = 0;
 
-            // Returns DataBaseTableInterface class singleton instance
-            virtual DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE getDataBaseTable() = 0;
-
+#ifdef _ENABLE_DB_
             // Returns DataBaseConnectorInterface class singleton instance
             virtual DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE getDBInstance() = 0;
 
             // Returns DB Queue class singleton interface
             virtual EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getDBQueueInterface() = 0;
-
+#endif
             // Returns HttpParser class singleton instance
             virtual HTTP_SERVICE::S_PTR_HTTP_UTILITY &getHTTPUtility() = 0;
 
@@ -65,9 +66,10 @@ namespace FRAMEWORK
 
         protected:
             NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE m_nwInterface = nullptr;
-            DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE m_dbTableInterface = nullptr;
+#ifdef _ENABLE_DB_
             DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE m_dbConnector = nullptr;
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE m_dbQueueInterface = nullptr;
+#endif
             HTTP_SERVICE::S_PTR_HTTP_UTILITY m_HttpUtility = nullptr;
             HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER m_HttpSesssionManager = nullptr;
             LOGGER_SERVICE::S_PTR_LOGGER m_Logger = nullptr;

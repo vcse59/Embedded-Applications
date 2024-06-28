@@ -40,6 +40,7 @@ void TCPClient::startClient()
 void TCPClient::run()
 {
         int socket_fd = -1;
+        int opt = 1;
         struct sockaddr_in ServerAddress;
         m_SessionId = "5344de763fe60e4a4477d0a043efa3ba";
 
@@ -47,6 +48,15 @@ void TCPClient::run()
         if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         {
             std::cout << "Socket creation failed" << std::endl;
+            return;
+        }
+
+        // set master socket to allow multiple connections ,
+        // this is just a good habit, it will work without this
+        if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *)&opt,
+                       sizeof(opt)) < 0)
+        {
+            perror("setsockopt");
             return;
         }
 

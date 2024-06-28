@@ -12,14 +12,16 @@
 #include "JsonModule/JSONParser.h"
 #include "JsonModule/JsonItem.h"
 #include "Containers/Queue.h"
+#ifdef _ENABLE_DB_
 #include "Modules/EventMessage/DBEventQueue.h"
 #include "Modules/EventMessage/DBEventMessage.h"
+#endif
 using namespace std;
 using namespace NetworkClass;
 using namespace Storage;
 using namespace COMMON_DEFINITIONS;
 
-void userInput(NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE intf)
+void userInput(NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ntwkInteface)
 {
     std::cout << "Press any 'exit' to quit:" << std::endl;
     
@@ -50,9 +52,9 @@ void userInput(NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE intf)
         // Do other tasks here...
         usleep(100000); // Sleep for 100 milliseconds (adjust as needed)
     }
-
+    ntwkInteface->setCloseFlag(true);
+    ntwkInteface->stopThreads();
     std::cout << "Exiting program..." << std::endl;
-    intf->closeSocket();
 }
 
 int main(int argc, char *argv[])
@@ -66,14 +68,15 @@ int main(int argc, char *argv[])
     }
 
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+
     NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ntwkInteface = consoleApp->getTCPServer();
-    
+
     // Start a thread that waits for user input
     std::thread userThread(userInput, ntwkInteface);
 
     // Start server
-    std::thread th1(&NetworkClassInterface::createServer, ntwkInteface.get(), NetworkClass::eLISTENING_MODE::EPOLL_MODE);    
-    
+    std::thread th1(&NetworkClassInterface::createServer, ntwkInteface.get(), NetworkClass::eLISTENING_MODE::EPOLL_MODE);
+
     // Join the thread
     th1.join();
     userThread.join();

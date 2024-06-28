@@ -1,7 +1,9 @@
 #include "Modules/ConsoleMain.h"
 
 using namespace FRAMEWORK;
+#ifdef _ENABLE_DB_
 using namespace DATABASE_SERVICE;
+#endif
 using namespace NetworkClass;
 
 std::shared_ptr<FRAMEWORK::ConsoleAppInterface> FRAMEWORK::ConsoleMain::m_Interface;
@@ -19,14 +21,7 @@ NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE ConsoleMain::getTCPServer()
     return m_nwInterface;
 }
 
-DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE ConsoleMain::getDataBaseTable()
-{
-    if (m_dbTableInterface == nullptr)
-    {
-        m_dbTableInterface = std::make_shared<DataBaseTable>(getLogger());
-    }
-    return m_dbTableInterface;
-}
+#ifdef _ENABLE_DB_
 
 DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE ConsoleMain::getDBInstance()
 {
@@ -46,7 +41,7 @@ EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &ConsoleMain::getDBQueueInterface()
 
     return m_dbQueueInterface;
 }
-
+#endif
 HTTP_SERVICE::S_PTR_HTTP_UTILITY& ConsoleMain::getHTTPUtility()
 {
     if (m_HttpUtility == nullptr){
@@ -69,6 +64,8 @@ LOGGER_SERVICE::S_PTR_LOGGER& ConsoleMain::getLogger()
     if (m_Logger == nullptr)
     {
         m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::RemoteWriter>(COMMON_DEFINITIONS::LOG_SERVER_IP, COMMON_DEFINITIONS::LOG_SERVER_PORT), LOGGER_SERVICE::eLOG_LEVEL_ENUM::ALL_LOG);
+        // WORKING - m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::ConsoleWriter>(), LOGGER_SERVICE::eLOG_LEVEL_ENUM::ALL_LOG);
+        // WORKING - m_Logger = std::make_shared<LOGGER_SERVICE::LoggerStream>(std::make_shared<LOGGER_SERVICE::FileWriter>(), LOGGER_SERVICE::eLOG_LEVEL_ENUM::ALL_LOG);
     }
     return m_Logger;
 }

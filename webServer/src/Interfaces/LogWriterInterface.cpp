@@ -23,6 +23,8 @@ LogWriterInterface::LogWriterInterface(std::function<void()> funcCallback)
 
 LogWriterInterface::~LogWriterInterface()
 {
+    setCloseflag(true);
+    stopLogger();
     outObject = nullptr;
 }
 
@@ -34,29 +36,40 @@ void LogWriterInterface::write(const std::string logMessage)
     strcpy(message.mLoggerString, logMessage.c_str());
     message.mMessageLen = logMessage.length();
 
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getLoggerQueueInterface();
-    std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> event = std::make_shared<EVENT_MESSAGE::LoggerEventMessage>();
-    event->setMessage(reinterpret_cast<char *>(&message), sizeof(message));
-    queueInterface->pushEvent(event);
+    std::weak_ptr<FRAMEWORK::ConsoleAppInterface> weakPtr(FRAMEWORK::ConsoleMain::getConsoleAppInterface());
+    std::weak_ptr<EVENT_MESSAGE::EventQueueInterface> eventWeakPtr(weakPtr.lock()->getLoggerQueueInterface());
 
-    mNotifyLoggerThread.notify_all(); // notify all waiting threads
+    auto queueInterface = eventWeakPtr.lock();
+    EVENT_MESSAGE::LoggerEventMessage event;
+    event.setMessage(reinterpret_cast<char *>(&message), sizeof(message));
+    queueInterface->pushEvent(event);
+    
+    mNotifyLoggerThread.notify_one(); // notify all waiting threads
 }
 
 void LogWriterInterface::processLogMessage()
 {
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getLoggerQueueInterface();
+    std::weak_ptr<FRAMEWORK::ConsoleAppInterface> weakPtr(FRAMEWORK::ConsoleMain::getConsoleAppInterface());
+    std::weak_ptr<EVENT_MESSAGE::EventQueueInterface> eventWeakPtr(weakPtr.lock()->getLoggerQueueInterface());
 
+    auto queueInterface = eventWeakPtr.lock();
     while (true)
     {
+        std::cout << "Waiting for loggerwait" << std::endl;
         std::unique_lock<std::mutex> lck(mMutex);
-        mNotifyLoggerThread.wait(lck, [&]
-                                 { return (queueInterface->getQueueLength() > 0); });
+        mNotifyLoggerThread.wait(lck);
+        std::cout << "Waiting is over : " << mNeedToClose << std::endl;
+        if (mNeedToClose)
+        {
+            std::cout << "Shutting down the logger thread" << std::endl;
+            break;
+        }
 
-        std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
-        EVENT_MESSAGE::LoggerMessage *message = (EVENT_MESSAGE::LoggerMessage *)elem1->getEventData();
-        *outObject << message->mLoggerString;
-        outObject->flush();
+        if (queueInterface->getQueueLength() > 0){
+            EVENT_MESSAGE::EventMessageInterface elem1 = queueInterface->getEvent();
+            EVENT_MESSAGE::LoggerMessage *message = (EVENT_MESSAGE::LoggerMessage *)elem1.getEventData();
+            *outObject << message->mLoggerString;
+            outObject->flush();
+        }
     }
 }

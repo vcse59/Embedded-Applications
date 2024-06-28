@@ -6,13 +6,18 @@ HttpSessionManager::HttpSessionManager(LOGGER_SERVICE::S_PTR_LOGGER logger)
 :m_logger(logger){
 }
 
-HttpSessionManager::~HttpSessionManager(){}
+HttpSessionManager::~HttpSessionManager(){
+}
 
 COMMON_DEFINITIONS::eSTATUS HttpSessionManager::init()
 {
+#ifdef _ENABLE_DB_
     FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
     DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbInterface = consoleApp->getDBInstance();
     return dbInterface->loadAccessToken(m_AccessTokenInfo);
+#else
+    return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
+#endif
 }
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::addSession(std::string sessionId){
@@ -32,7 +37,7 @@ COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::removeSession(std::
 
 COMMON_DEFINITIONS::eHTTP_SESSION_STATUS HttpSessionManager::isValidSession(std::string sessionId){
     std::lock_guard<std::mutex> lock(mMutex);
-    std::cout << "SESSION : " << sessionId << std::endl;
+    LOGGER(m_logger) << "SESSION : " << sessionId << std::endl;
     if (m_SessionInfo.find(sessionId) == m_SessionInfo.end()){
         return COMMON_DEFINITIONS::eHTTP_SESSION_STATUS::SESSION_EXPIRED;
     }
@@ -48,7 +53,7 @@ std::string HttpSessionManager::processHTTPMessage(HTTP_SERVICE::HttpParams& htt
         auto iter = m_AccessTokenInfo.begin();
         while(iter != m_AccessTokenInfo.end())
         {
-            std::cout << "Stored : " << *iter << std::endl;
+            LOGGER(m_logger) << "Stored : " << *iter << std::endl;
             iter++;
         }
 

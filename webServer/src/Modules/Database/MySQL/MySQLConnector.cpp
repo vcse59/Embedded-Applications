@@ -23,6 +23,15 @@ MySQLConnector::MySQLConnector(LOGGER_SERVICE::S_PTR_LOGGER logger) : m_logger(l
 
 MySQLConnector::~MySQLConnector()
 {
+    setCloseflag(true);
+    stopDBThread();
+    
+    std::unique_lock<std::mutex> lck(mMutex);
+    if (m_DBconnection != nullptr){
+        std::cout << "Committing pending DB transaction" << std::endl;
+        m_DBconnection->commit();
+    }
+
     if (m_PrepStatement != nullptr)
     {
         delete m_PrepStatement;
@@ -154,21 +163,30 @@ COMMON_DEFINITIONS::eSTATUS MySQLConnector::initializeDB()
 
 void MySQLConnector::processDBEvents()
 {
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getDBQueueInterface();
+    std::weak_ptr<FRAMEWORK::ConsoleAppInterface> weakPtr(FRAMEWORK::ConsoleMain::getConsoleAppInterface());
+    std::weak_ptr<EVENT_MESSAGE::EventQueueInterface> eventWeakPtr(weakPtr.lock()->getDBQueueInterface());
+
+    auto queueInterface = eventWeakPtr.lock();
 
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        mNotifyDBThread.wait(lck, [&]
-                             { return queueInterface->getQueueLength() > 0; });
+        mNotifyDBThread.wait(lck);
 
-        mLastQueryTime = std::chrono::system_clock::now();
-        std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
-        EVENT_MESSAGE::DBMessage *message = (EVENT_MESSAGE::DBMessage *)elem1->getEventData();
+        if (mNeedToClose)
+        {
+            std::cout << "Shutting down the database threads";
+            break;
+        }
 
-        COMMON_DEFINITIONS::eSTATUS status = executeQuery(message->mTableName, message->mQueryString, message->mQueryType);
+        if (queueInterface->getQueueLength() > 0)
+        {
+            mLastQueryTime = std::chrono::system_clock::now();
+            EVENT_MESSAGE::EventMessageInterface elem1 = queueInterface->getEvent();
+            EVENT_MESSAGE::DBMessage *message = (EVENT_MESSAGE::DBMessage *)elem1.getEventData();
 
+            executeQuery(message->mTableName, message->mQueryString, message->mQueryType);
+        }
     }
 }
 
@@ -176,6 +194,11 @@ void MySQLConnector::commitDBTransaction()
 {
     while (true)
     {
+        if (mNeedToClose)
+        {
+            std::cout << "Shutting down the DB Commit thread " << std::endl;
+            break;
+        }
         std::chrono::duration<double> diff = std::chrono::system_clock::now() - mLastQueryTime;
         if (diff.count() > 5 && mRecordCount > 0)
         {

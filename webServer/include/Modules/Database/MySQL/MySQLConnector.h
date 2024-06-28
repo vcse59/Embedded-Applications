@@ -43,6 +43,18 @@ namespace DATABASE_SERVICE
         void commitDBTransaction() override;
 
     private:
+        void stopDBThread()
+        {
+            std::unique_lock<std::mutex> lck(mMutex);
+            mNotifyDBThread.notify_one();
+        }
+
+        void setCloseflag(bool closeFlag)
+        {
+            std::unique_lock<std::mutex> lck(mMutex);
+            mNeedToClose = closeFlag;
+        }
+
         COMMON_DEFINITIONS::eSTATUS connectToDBService();
         COMMON_DEFINITIONS::eSTATUS createDataBase(std::string dbName);
         COMMON_DEFINITIONS::eSTATUS createTable(std::string tableName, std::string createTableQuery);
@@ -52,6 +64,7 @@ namespace DATABASE_SERVICE
         COMMON_DEFINITIONS::eSTATUS isDataBaseExists(std::string dbName);
         COMMON_DEFINITIONS::eSTATUS isTableExists(std::string tableName);
 
+        bool mNeedToClose = {false};
         sql::Driver *m_DBdriver = nullptr;
         sql::Connection *m_DBconnection = nullptr;
         sql::PreparedStatement *m_PrepStatement = nullptr;

@@ -34,6 +34,8 @@ namespace NetworkClass
             COMMON_DEFINITIONS::eSTATUS receiveMessage(int socket, std::string& message) override;
             COMMON_DEFINITIONS::eSTATUS closeSocket() override;
             int getConnectionId() const override;
+            virtual void stopThreads() override{}
+            virtual void setCloseFlag(bool closeFlag) override{}
             void run();
         
         private:

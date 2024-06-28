@@ -2,7 +2,7 @@
 
 source CONFIG.sh
 
-buildType="Release";
+buildType="Release"
 
 if [ -n "$1" ]; then
     buildType=$1
@@ -40,36 +40,36 @@ if [ ! -d "$CMAKE_LOGGER" ]; then
 fi
 
 # Change to server directory and run cmake command
-echo "Building $buildType server......"
+echo "Building $buildType $SERVER_APP_NAME......"
 cd "$CMAKE_SERVER"
 if [ "$buildType" = "Debug" ]; then
-    cmake -DCMAKE_BUILD_TYPE=Debug -D EXECUTABLE_NAME="$SERVER_APP_NAME" "../../$CMAKE_SERVER_FILE"
+    cmake -DCMAKE_BUILD_TYPE=Debug -D EXECUTABLE_NAME="$SERVER_APP_NAME" $2 "../../$CMAKE_SERVER_FILE"
 else
-    cmake -DCMAKE_BUILD_TYPE=Release -D EXECUTABLE_NAME="$SERVER_APP_NAME" "../../$CMAKE_SERVER_FILE"
+    cmake -DCMAKE_BUILD_TYPE=Release -D EXECUTABLE_NAME="$SERVER_APP_NAME" $2 "../../$CMAKE_SERVER_FILE"
 fi
-make
+make -j16
 
 # Change to client directory and run cmake command
 cd ../../
-echo "Building $buildType client......"
+echo "Building $buildType $CLIENT_APP_NAME......"
 cd "$CMAKE_CLIENT"
 if [ "$buildType" = "Debug" ]; then
     cmake -DCMAKE_BUILD_TYPE=Debug -D EXECUTABLE_NAME="$CLIENT_APP_NAME" "../../$CMAKE_CLIENT_FILE"
 else
     cmake -DCMAKE_BUILD_TYPE=Release -D EXECUTABLE_NAME="$CLIENT_APP_NAME" "../../$CMAKE_CLIENT_FILE"
 fi
-make
+make -j16
 
 # Change to client directory and run cmake command
 cd ../../
-echo "Building $buildType loggerServer......"
+echo "Building $buildType $LOGGER_SERVER_APP_NAME......"
 cd "$CMAKE_LOGGER"
 if [ "$buildType" = "Debug" ]; then
     cmake -DCMAKE_BUILD_TYPE=Debug -D EXECUTABLE_NAME="$LOGGER_SERVER_APP_NAME" "../../$CMAKE_LOGGER_SERVER_FILE"
 else
     cmake -DCMAKE_BUILD_TYPE=Release -D EXECUTABLE_NAME="$LOGGER_SERVER_APP_NAME" "../../$CMAKE_LOGGER_SERVER_FILE"
 fi
-make
+make -j16
 
 # Copy the binaries to bin directory
 cd ../../

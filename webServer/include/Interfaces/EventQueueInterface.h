@@ -11,48 +11,34 @@ namespace EVENT_MESSAGE
     {
         public:
             EventQueueInterface(){}
-            virtual ~EventQueueInterface() {}
-
-            COMMON_DEFINITIONS::eSTATUS initializeQueue()
-            {
-                if (mEventQueue == nullptr)
-                    mEventQueue = std::make_shared<Storage::QueueContainer<Storage::SingleLLNode>>();
-                return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
-            }
-
+            virtual ~EventQueueInterface(){}
             unsigned int getQueueLength()
             {
-                return (mEventQueue != nullptr) ? mEventQueue->getLength() : 0;
+                return mEventQueue.getLength();
             }
 
-            virtual std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> getEvent() = 0;
+            virtual EVENT_MESSAGE::EventMessageInterface getEvent() = 0;
 
-            COMMON_DEFINITIONS::eSTATUS pushEvent(std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> msg)
+            COMMON_DEFINITIONS::eSTATUS pushEvent(EVENT_MESSAGE::EventMessageInterface& msg)
             {
-                if (mEventQueue == nullptr)
-                    initializeQueue();
-                mEventQueue->enqueue(msg->getMessage());
+                mEventQueue.enqueue(msg.getMessage());
                 return COMMON_DEFINITIONS::eSTATUS::SUCCESS;
             }
 
-            virtual std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> front() = 0;
+            virtual EVENT_MESSAGE::EventMessageInterface front() = 0;
 
         protected:
-            std::shared_ptr<Storage::SingleLLNode> popEvent()
+            Storage::SingleLLNode popEvent()
             {
-                if (mEventQueue == nullptr)
-                    initializeQueue();
-                return std::make_shared<Storage::SingleLLNode>(mEventQueue->dequeue());
+                return mEventQueue.dequeue();
             }
 
-            std::shared_ptr<Storage::SingleLLNode> frontEvent()
+            Storage::SingleLLNode frontEvent()
             {
-                if (mEventQueue == nullptr)
-                    initializeQueue();
-                return std::make_shared<Storage::SingleLLNode>(mEventQueue->front());
+                return mEventQueue.front();
             }
 
-            std::shared_ptr<Storage::QueueContainer<Storage::SingleLLNode>> mEventQueue;
+            Storage::QueueContainer<Storage::SingleLLNode> mEventQueue;
     };
 
     typedef std::shared_ptr<EVENT_MESSAGE::EventQueueInterface> S_PTR_EVENT_QUEUE_INTERFACE;

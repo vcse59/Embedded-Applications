@@ -1,15 +1,28 @@
 #include "Modules/Logger/RemoteWriter.h"
+#include <signal.h>
+#include <pthread.h>
 
 using namespace LOGGER_SERVICE;
 
 COMMON_DEFINITIONS::eSTATUS RemoteWriter::connectToRemoteLogServer()
 {
     struct sockaddr_in ServerAddress;
+    int opt = -1;
 
     // Create a socket
     if ((mClientSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
         std::cout << "Socket creation failed" << std::endl;
+        return COMMON_DEFINITIONS::eSTATUS::SOCKET_INITIALIZATION_FAILED;
+    }
+
+    // set master socket to allow multiple connections ,
+    // this is just a good habit, it will work without this
+    if (setsockopt(mClientSocket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *)&opt,
+                   sizeof(opt)) < 0)
+    {
+        perror("setsockopt");
+        closeSocket();
         return COMMON_DEFINITIONS::eSTATUS::SOCKET_INITIALIZATION_FAILED;
     }
 
@@ -40,8 +53,14 @@ COMMON_DEFINITIONS::eSTATUS RemoteWriter::sendMessage(const std::string &message
         ssize_t sent = send(mClientSocket, data, remaining, 0);
         if (sent == -1)
         {
-            // Handle send error
-            std::cerr << "Error sending data\n";
+            if (errno == EPIPE || errno == ECONNRESET)
+            {
+                std::cerr << "Connection closed by the server." << std::endl;
+            }
+            else
+            {
+                std::cerr << "Failed to send data: " << strerror(errno) << std::endl;
+            }
             closeSocket();
             return COMMON_DEFINITIONS::eSTATUS::ERROR;
         }
@@ -73,20 +92,35 @@ COMMON_DEFINITIONS::eSTATUS RemoteWriter::closeSocket()
 
 void RemoteWriter::processLogEvents()
 {
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getLoggerQueueInterface();
-    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE pendingQueueInterface = consoleApp->getLoggerPendingQueueInterface();
+    // Block SIGPIPE in this thread
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+
+    std::weak_ptr<FRAMEWORK::ConsoleAppInterface> weakPtr(FRAMEWORK::ConsoleMain::getConsoleAppInterface());
+    std::weak_ptr<EVENT_MESSAGE::EventQueueInterface> eventWeakPtr(weakPtr.lock()->getLoggerQueueInterface());
+    std::weak_ptr<EVENT_MESSAGE::EventQueueInterface> pendingQueueWeakPtr(weakPtr.lock()->getLoggerPendingQueueInterface());
+
+    auto queueInterface = eventWeakPtr.lock();
+    auto pendingQueueInterface = pendingQueueWeakPtr.lock();
 
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        mNotifyLoggerThread.wait(lck, [&]
-                                 { return (queueInterface->getQueueLength() > 0); });
+        mNotifyLoggerThread.wait(lck);
 
-        while (queueInterface->getQueueLength() > 0)
+        if (mNeedToClose)
         {
-            std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
-            EVENT_MESSAGE::LoggerMessage *message = (EVENT_MESSAGE::LoggerMessage *)elem1->getEventData();
+            std::cout << "Shutting down the remote logger thread";
+            break;
+        }
+
+        if (queueInterface->getQueueLength() > 0)
+        {
+            EVENT_MESSAGE::EventMessageInterface elem1 = queueInterface->getEvent();
+            EVENT_MESSAGE::LoggerMessage *message = (EVENT_MESSAGE::LoggerMessage *)elem1.getEventData();
             if (mClientSocket != -1)
             {
                 if (sendMessage(std::string(message->mLoggerString)) != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
@@ -101,8 +135,8 @@ void RemoteWriter::processLogEvents()
                 EVENT_MESSAGE::LoggerMessage pendingMessage;
                 memcpy(pendingMessage.mLoggerString, message->mLoggerString, sizeof(pendingMessage));
                 pendingMessage.mMessageLen = message->mMessageLen;
-                std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> event = std::make_shared<EVENT_MESSAGE::LoggerEventMessage>();
-                event->setMessage(reinterpret_cast<char *>(&pendingMessage), sizeof(pendingMessage));
+                EVENT_MESSAGE::LoggerEventMessage event;
+                event.setMessage(reinterpret_cast<char *>(&pendingMessage), sizeof(pendingMessage));
                 pendingQueueInterface->pushEvent(event);
             }
         }
@@ -111,30 +145,45 @@ void RemoteWriter::processLogEvents()
 
 void RemoteWriter::retryConnection()
 {
+    // Block SIGPIPE in this thread
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
     while(true){
         std::unique_lock<std::mutex> lck(mRetryMutex);
-        mRetryCV.wait(lck, [&]{return (mClientSocket == -1);});
-
-        std::cout << "Trying to reconnect again" << std::endl;
-        COMMON_DEFINITIONS::eSTATUS status = connectToRemoteLogServer();
-        if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+        if (mRetryCV.wait_for(lck, std::chrono::seconds(COMMON_DEFINITIONS::LOGGER_SERVER_CONNECTION_RETRY_SECONDS)) == std::cv_status::timeout)//, [&]{return (mClientSocket == -1);}))
         {
-            std::cout << "Retrying to connect again in 5 secs to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl; 
-            std::this_thread::sleep_for(std::chrono::seconds(5));
-            mRetryCV.notify_one();
-        }else{
-            std::cout << "Successfully connected to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl;
-
-            std::unique_lock<std::mutex> lck(mMutex);
-
-            FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-            EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE pendingQueueInterface = consoleApp->getLoggerPendingQueueInterface();
-
-            while (pendingQueueInterface->getQueueLength() > 0)
+            if (mNeedToClose)
             {
-                std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> pendingEventMessage = pendingQueueInterface->getEvent();
-                EVENT_MESSAGE::LoggerMessage *pendingMessage = (EVENT_MESSAGE::LoggerMessage *)pendingEventMessage->getEventData();
-                sendMessage(std::string(pendingMessage->mLoggerString));
+                std::cout << "Shutting down the retry thread (to reconnect to logger server)" << std::endl;
+                break;
+            }
+
+            if (sendMessage(COMMON_DEFINITIONS::HEARTBEAT_STRING) != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+            {
+                std::cout << "Trying to reconnect again" << std::endl;
+                COMMON_DEFINITIONS::eSTATUS status = connectToRemoteLogServer();
+                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+                {
+                    std::cout << "Retrying to connect again in 5 secs to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl; 
+                }else{
+                    std::cout << "Successfully connected to log server IP " << mServerIPAddress << " at port number " << mPortNumber << std::endl;
+
+                    std::unique_lock<std::mutex> lck(mMutex);
+
+                    std::weak_ptr<FRAMEWORK::ConsoleAppInterface> weakPtr(FRAMEWORK::ConsoleMain::getConsoleAppInterface());
+                    std::weak_ptr<EVENT_MESSAGE::EventQueueInterface> pendingQueueWeakPtr(weakPtr.lock()->getLoggerPendingQueueInterface());
+                    auto pendingQueueInterface = pendingQueueWeakPtr.lock();
+
+                    while (pendingQueueInterface->getQueueLength() > 0)
+                    {
+                        EVENT_MESSAGE::EventMessageInterface pendingEventMessage = pendingQueueInterface->getEvent();
+                        EVENT_MESSAGE::LoggerMessage *pendingMessage = (EVENT_MESSAGE::LoggerMessage *)pendingEventMessage.getEventData();
+                        sendMessage(std::string(pendingMessage->mLoggerString));
+                    }
+                }
             }
         }
     }

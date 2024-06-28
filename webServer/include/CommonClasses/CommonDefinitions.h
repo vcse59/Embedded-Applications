@@ -67,13 +67,15 @@ namespace COMMON_DEFINITIONS
         SESSION_VALID       = 5
     };
 
-    constexpr unsigned int WEB_SERVER_PORT = <WEB_SERVER_PORT>; // 9999
-    constexpr const char LOG_SERVER_IP[] = <LOG_SERVER_IP>;
-    constexpr unsigned int LOG_SERVER_PORT = <LOG_SERVER_PORT>; // 10000;
-    constexpr const char LOG_FILE_NAME[] = "applicationLog.txt";
-    constexpr const char MYSQL_SERVER_IP[] = <MYSQL_SERVER_IP>;
-    constexpr unsigned int MYSQL_SERVER_PORT = <MYSQL_SERVER_PORT>; // 3306;
-    constexpr const char MYSQL_USERNAME[] = <MYSQL_USERNAME>;
-    constexpr const char MYSQL_PASSWORD[] = <MYSQL_PASSWORD>;
+    constexpr unsigned int  WEB_SERVER_PORT                         = <WEB_SERVER_PORT>; // 9999
+    constexpr const char    LOG_SERVER_IP[]                         = <LOG_SERVER_IP>;
+    constexpr unsigned int  LOG_SERVER_PORT                         = <LOG_SERVER_PORT>; // 10000;
+    constexpr const char    LOG_FILE_NAME[]                         = "applicationLog.txt";
+    constexpr const char    MYSQL_SERVER_IP[]                       = <MYSQL_SERVER_IP>;
+    constexpr unsigned int  MYSQL_SERVER_PORT                       = <MYSQL_SERVER_PORT>; // 3306;
+    constexpr const char    MYSQL_USERNAME[]                        = <MYSQL_USERNAME>;
+    constexpr const char    MYSQL_PASSWORD[]                        = <MYSQL_PASSWORD>;
+    constexpr unsigned int  LOGGER_SERVER_CONNECTION_RETRY_SECONDS  =   1;
+    constexpr const char    HEARTBEAT_STRING[]                      = "HB Keep Alive";
 }
 #endif

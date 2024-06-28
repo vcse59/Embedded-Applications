@@ -27,9 +27,12 @@ TCPServer::TCPServer(LOGGER_SERVICE::S_PTR_LOGGER logger, unsigned int portNumbe
 
 TCPServer::~TCPServer()
 {
+    setCloseFlag(true);
+    stopThreads();
+
     if (mServerSocket > 0)
     {
-        LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Closing the web server" << endl;
+        std::cout << "Closing the web server" << endl;
     }
 
 	for (unsigned int i = 0; i < MAX_CONNECTIONS; i++)
@@ -38,7 +41,8 @@ TCPServer::~TCPServer()
 			close(mClientSockets[i]);
 	}
 
-	close(mServerSocket);
+    if (mServerSocket != -1)
+    	close(mServerSocket);
 	mServerSocket = -1;
 
 	memset(mClientSockets, -1, sizeof(int) * MAX_CONNECTIONS);
@@ -114,12 +118,12 @@ eSTATUS TCPServer::useSelect()
     int addrlen , new_socket , activity;   
 	struct sockaddr_in address;
 
-    isServerClosed = false;
+    mNeedToClose = false;
 	addrlen = sizeof(address);
     LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Waiting for connections ..." << std::endl;
 
-    while(!isServerClosed)   
-	{  
+    while (!mNeedToClose)
+    {  
         int client_socket = -1;
         struct sockaddr_in client_addr;
         socklen_t client_addr_len = sizeof(client_addr);
@@ -171,8 +175,8 @@ eSTATUS TCPServer::usePoll()
     int addrlen , new_socket , activity;   
 	struct sockaddr_in address;
 
-    isServerClosed = false;
-	addrlen = sizeof(address);
+    mNeedToClose = false;
+    addrlen = sizeof(address);
     LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Waiting for connections ..." << std::endl;
 
     struct pollfd fds[MAX_CONNECTIONS + 1]; // Plus 1 for master socket
@@ -182,8 +186,8 @@ eSTATUS TCPServer::usePoll()
     fds[0].fd = mServerSocket;
    	fds[0].events = POLLIN;
 
-	while(!isServerClosed)   
-	{  
+    while (!mNeedToClose)
+    {  
 	    int new_socket;
 
 	    // Call poll() to wait for events
@@ -220,8 +224,8 @@ eSTATUS TCPServer::useEPoll()
     struct  epoll_event events; 
 	struct sockaddr_in address;
 
-    isServerClosed = false;
-	//accept the incoming connection  
+    mNeedToClose = false;
+    //accept the incoming connection  
 	addrlen = sizeof(address);
     LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG <<  "Waiting for connections ..." << std::endl;
 
@@ -245,7 +249,7 @@ eSTATUS TCPServer::useEPoll()
         return COMMON_DEFINITIONS::eSTATUS::ERROR;
     }
 
-    while(!isServerClosed)
+    while (!mNeedToClose)
     {
         // Wait for events
         activity = epoll_wait(epoll_fd, &events, 1, SERVER_LISTENDER_TIMEOUT_IN_MS);
@@ -287,10 +291,13 @@ void TCPServer::handle_connection(int client_socket) {
     EVENT_MESSAGE::HTTPMessage message;
     message.socketId = client_socket;
 
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getHTTPQueueInterface();
-    std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> event = std::make_shared<EVENT_MESSAGE::HTTPEventMessage>();
-    event->setMessage(reinterpret_cast<char *>(&message), sizeof(message));
+    std::weak_ptr<FRAMEWORK::ConsoleAppInterface> weakPtr(FRAMEWORK::ConsoleMain::getConsoleAppInterface());
+    std::weak_ptr<EVENT_MESSAGE::EventQueueInterface> eventWeakPtr(weakPtr.lock()->getHTTPQueueInterface());
+
+    auto queueInterface = eventWeakPtr.lock();
+
+    EVENT_MESSAGE::HTTPEventMessage event;
+    event.setMessage(reinterpret_cast<char *>(&message), sizeof(message));
     queueInterface->pushEvent(event);
 
     mNotifyHTTPThread.notify_all(); // notify all waiting threads
@@ -352,7 +359,7 @@ eSTATUS TCPServer::receiveMessage(int socket, std::string& message)
 eSTATUS TCPServer::closeSocket()
 {
     LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::INFO_LOG << "Shutting down the web server" << endl;
-    isServerClosed = true;
+    mNeedToClose = true;
     return eSTATUS::SUCCESS;
 }
 
@@ -378,28 +385,36 @@ void* TCPServer::get_in_addr(struct sockaddr *sa){
 
 void TCPServer::processHTTPMessage()
 {
-    FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
-    EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getHTTPQueueInterface();
+    std::weak_ptr<FRAMEWORK::ConsoleAppInterface> weakPtr(FRAMEWORK::ConsoleMain::getConsoleAppInterface());
+    std::weak_ptr<EVENT_MESSAGE::EventQueueInterface> eventWeakPtr(weakPtr.lock()->getHTTPQueueInterface());
+
+    auto queueInterface = eventWeakPtr.lock();
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        mNotifyHTTPThread.wait(lck, [&]
-                               { return (queueInterface->getQueueLength() > 0); });
+        mNotifyHTTPThread.wait(lck);
 
-        std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> elem1 = queueInterface->getEvent();
-        EVENT_MESSAGE::HTTPMessage *message = (EVENT_MESSAGE::HTTPMessage *)elem1->getEventData();
+        if (mNeedToClose)
+        {
+            std::cout << "Shutting down the web server thread";
+            break;
+        }
 
-        std::string receivedData;
+        if (queueInterface->getQueueLength() > 0)
+        {
+            EVENT_MESSAGE::EventMessageInterface elem1 = queueInterface->getEvent();
+            EVENT_MESSAGE::HTTPMessage *message = (EVENT_MESSAGE::HTTPMessage *)elem1.getEventData();
 
-        FRAMEWORK::S_PTR_CONSOLEAPPINTERFACE consoleApp = FRAMEWORK::ConsoleMain::getConsoleAppInterface();
+            std::string receivedData;
 
-        receiveMessage(message->socketId, receivedData);
+            receiveMessage(message->socketId, receivedData);
 
-        HTTP_SERVICE::HttpParams params(m_logger, receivedData);
-        std::string http_response = consoleApp->getHTTPSessionManager()->processHTTPMessage(params);
+            HTTP_SERVICE::HttpParams params(m_logger, receivedData);
+            std::string http_response = weakPtr.lock()->getHTTPSessionManager()->processHTTPMessage(params);
 
-        sendMessage(message->socketId, http_response.c_str());
+            sendMessage(message->socketId, http_response.c_str());
 
-        close(message->socketId);
+            close(message->socketId);
+        }
     }
 }

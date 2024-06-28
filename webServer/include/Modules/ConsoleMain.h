@@ -17,9 +17,12 @@
 #include "Modules/Logger/Logger.h"
 #include "Modules/EventMessage/LoggerEventQueue.h"
 #include "Modules/EventMessage/HTTPEventQueue.h"
+
+#ifdef _ENABLE_DB_
 #include "Modules/EventMessage/DBEventQueue.h"
-#include "Modules/Database/MySQL/DataBaseTable.h"
 #include "Modules/Database/MySQL/MySQLConnector.h"
+#endif
+
 #include "Modules/Logger/ConsoleWriter.h"
 #include "Modules/Logger/FileWriter.h"
 #include "Modules/Logger/RemoteWriter.h"
@@ -43,39 +46,12 @@ namespace FRAMEWORK
                 std::shared_ptr<FRAMEWORK::ConsoleAppInterface> consoleApp = getConsoleAppInterface();
                 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE loggerQueueInterface = consoleApp->getLoggerQueueInterface();
                 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE loggerPendingQueueInterface = consoleApp->getLoggerPendingQueueInterface();
-
-                status = loggerPendingQueueInterface->initializeQueue();
-
-                // Initialize the pending queue for logger
-                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
-                {
-                    std::cout << "Failed to initialize pending logger queue" << std::endl;
-                    return status;
-                }
-
-                status = loggerQueueInterface->initializeQueue();
-
-                // Initialize the queue for logger
-                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
-                {
-                    std::cout << "Failed to initialize logger queue" << std::endl;
-                    return status;
-                }
-
                 LOGGER_SERVICE::S_PTR_LOGGER logger = consoleApp->getLogger();
                 NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE nwServerIntf = consoleApp->getTCPServer();
-                DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE tableIntf = consoleApp->getDataBaseTable();
+                
+#ifdef _ENABLE_DB_
                 DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbIntf = consoleApp->getDBInstance();
                 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE dbQueueInterface = consoleApp->getDBQueueInterface();
-
-                status = dbQueueInterface->initializeQueue();
-
-                // Initialize the queue for db
-                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
-                {
-                    LOGGER(logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Failed to initialize DB queue" << std::endl;
-                    return status;
-                }
 
                 status = dbIntf->initializeDB();
 
@@ -85,19 +61,10 @@ namespace FRAMEWORK
                     LOGGER(logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Initializing DB is failed...Exiting the program" << std::endl;
                     return status;
                 }
-
+#endif
                 HTTP_SERVICE::S_PTR_HTTP_UTILITY httpUtility = consoleApp->getHTTPUtility();
                 HTTP_SERVICE::S_PTR_HTTP_SESSION_MANAGER httpSessionManager = consoleApp->getHTTPSessionManager();
                 EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE httpQueueInterface = consoleApp->getHTTPQueueInterface();
-
-                status = httpQueueInterface->initializeQueue();
-
-                // Initialize the queue for HTTP
-                if (status != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
-                {
-                    LOGGER(logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::ERROR_LOG << "Failed to initialize HTTPEvent queue" << std::endl;
-                    return status;
-                }
 
                 // Load the Access Token Data
                 if (httpSessionManager->init() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
@@ -111,15 +78,13 @@ namespace FRAMEWORK
             // Returns NetworkClassInterface class singleton instance
             NetworkClass::S_PTR_NETWORK_CLASS_INTERFACE getTCPServer() override;
 
-            // Returns DataBaseTableInterface class singleton instance
-            DATABASE_SERVICE::S_PTR_DATABASE_TABLE_INTERFACE getDataBaseTable() override;
-
+#ifdef _ENABLE_DB_
             // Returns DataBaseConnectorInterface class singleton instance
             DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE getDBInstance() override;
 
             // Returns DB Queue class singleton interface
             EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE &getDBQueueInterface() override;
-
+#endif
             // Returns HttpParser class singleton instance
             HTTP_SERVICE::S_PTR_HTTP_UTILITY &getHTTPUtility() override;
 

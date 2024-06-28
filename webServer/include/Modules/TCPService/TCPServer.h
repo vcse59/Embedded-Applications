@@ -38,8 +38,19 @@ namespace NetworkClass
             COMMON_DEFINITIONS::eSTATUS closeSocket() override;
             int getConnectionId() const override;
 
+            void stopThreads() override
+            {
+                std::unique_lock<std::mutex> lck(mMutex);
+                mNotifyHTTPThread.notify_one();
+            }
+
+            void setCloseFlag(bool closeFlag) override
+            {
+                std::unique_lock<std::mutex> lck(mMutex);
+                mNeedToClose = closeFlag;
+            }
+
         private:
-            bool isServerClosed = {true};
             LOGGER_SERVICE::S_PTR_LOGGER m_logger;
             int mServerSocket = {-1};
             int mClientSockets[MAX_CONNECTIONS] = {-1,};

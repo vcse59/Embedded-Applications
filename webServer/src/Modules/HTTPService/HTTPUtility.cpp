@@ -22,8 +22,6 @@ std::string HTTPUtility::readIndexHtml(const std::string& filename) {
     std::stringstream buffer;
     buffer << file.rdbuf();
 
-    // Output the contents of the file
-    //std::cout << "Contents of index.html:\n" << buffer.str() << std::endl;
 
     return buffer.str();
 }

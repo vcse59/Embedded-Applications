@@ -26,7 +26,8 @@ namespace DATABASE_SERVICE
     {
     public:
         DataBaseConnectorInterface() {}
-        virtual ~DataBaseConnectorInterface() {}
+        virtual ~DataBaseConnectorInterface() {
+        }
 
         virtual COMMON_DEFINITIONS::eSTATUS initializeDB() = 0;
         virtual COMMON_DEFINITIONS::eSTATUS executeQuery(std::string tableName,
@@ -40,12 +41,6 @@ namespace DATABASE_SERVICE
             mNotifyDBThread.notify_one(); // notify all waiting threads
         }
 
-        void notifyCommitThread()
-        {
-            std::unique_lock<std::mutex> Commitlck(mCommitMutex);
-            mNotifyCommitThread.notify_one(); // notify waiting commit thread
-        }
-
         unsigned int getCurrentRecordCount() const{
             return mRecordCount;
         }
@@ -54,7 +49,6 @@ namespace DATABASE_SERVICE
         std::mutex mMutex;
         std::mutex mCommitMutex;
         std::condition_variable mNotifyDBThread;
-        std::condition_variable mNotifyCommitThread;
         std::shared_ptr<std::thread> m_DBThread = nullptr;
         std::shared_ptr<std::thread> m_CommitThread = nullptr;
         unsigned int mRecordCount = 0;

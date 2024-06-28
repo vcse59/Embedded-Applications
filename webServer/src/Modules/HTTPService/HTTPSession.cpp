@@ -16,7 +16,8 @@ HttpSession::HttpSession(LOGGER_SERVICE::S_PTR_LOGGER logger
     m_UserId = httpUtility->generateSessionID();
     m_HostURL   = "http://" + hostURL;
 }
-HttpSession::~HttpSession(){}
+HttpSession::~HttpSession(){
+}
 
 bool HttpSession::isSessionAlive(){
     return true;
@@ -40,6 +41,8 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     std::string httpMethod      = httpParams.getParams(HTTP_SERVICE::eHEADER_FIELD::HEADER_METHOD);
     std::string httpError       = httpParams.getError();
 
+#ifdef _ENABLE_DB_
+
     DATABASE_SERVICE::S_PTR_DATABASE_CONNECTOR_INTERFACE dbConnector = consoleApp->getDBInstance();
     std::string insertQuery = "INSERT INTO " + tableName + " (USERID, SESSIONID, HTTPMETHOD, RESOURCEURL, DATARAW, HTTPERROR)  \
         VALUES (\"" + m_UserId +
@@ -52,11 +55,11 @@ std::string HttpSession::processHTTPMessage(HTTP_SERVICE::HttpParams& httpParams
     message.mQueryType = COMMON_DEFINITIONS::eQUERY_TYPE::DATA_MANIPULATION;
 
     EVENT_MESSAGE::S_PTR_EVENT_QUEUE_INTERFACE queueInterface = consoleApp->getDBQueueInterface();
-    std::shared_ptr<EVENT_MESSAGE::EventMessageInterface> event = std::make_shared<EVENT_MESSAGE::DBEventMessage>();
-    event->setMessage(reinterpret_cast<char *>(&message), sizeof(message));
+    EVENT_MESSAGE::DBEventMessage event;
+    event.setMessage(reinterpret_cast<char *>(&message), sizeof(message));
     queueInterface->pushEvent(event);
     dbConnector->notifyDBThread();
-
+#endif
     std::string response;
     LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Processing Request : " << httpMethod << std::endl;
     LOGGER(m_logger) << LOGGER_SERVICE::eLOG_LEVEL_ENUM::DEBUG_LOG << "Processing Resource URL : " << resourceURL << std::endl;

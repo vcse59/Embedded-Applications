@@ -45,7 +45,8 @@ namespace Storage
         }
 
         // Default Constructor
-        SingleLLNode() {}
+        SingleLLNode() {
+        }
 
         // Destructor
         ~SingleLLNode()

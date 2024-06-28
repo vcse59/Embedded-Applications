@@ -35,13 +35,15 @@ namespace LOGGER_SERVICE
             mRetryThread = std::make_shared<std::thread>(&RemoteWriter::retryConnection, this);
             mRetryThread->detach();
 
-            if (connectToRemoteLogServer() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
+            /*if (connectToRemoteLogServer() != COMMON_DEFINITIONS::eSTATUS::SUCCESS)
             {
                 std::unique_lock<std::mutex> lck(mRetryMutex);
                 mRetryCV.notify_one();
-            }
+            }*/
         }
         ~RemoteWriter() {
+            setCloseflag(true);
+            stopLogger();
             closeSocket();
         }
 
