@@ -15,6 +15,8 @@ Configure user credentials by replacing "CONFIGURE_USERNAME" and "CONFIGURE_PASS
 
   -  Navigate to the **webServer** directory.
   -  Execute the bash shell script **./INSTALL.sh** to compile the source code and link object files to generate the executable/binary.
+### NOTE 1 : To build in Debug/Release mode, add Release or Debug option e.g ./INSTALL.sh Release or ./INSTALL.sh Debug
+### NOTE 2 : To build webserver application to include MySQL connectivity code, run ./INSTALL.sh Release -DUSE_DATABASE_MODULE
   -  Execute **./startServer.sh** to run the binary and launch the web server to listen on port number **9999**.
   -  Execute **./startClient.sh** in a new tab/window shell to send requests to the web server on port number **9999** for testing.
 
