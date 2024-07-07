@@ -55,10 +55,8 @@ void LogWriterInterface::processLogMessage()
     auto queueInterface = eventWeakPtr.lock();
     while (true)
     {
-        std::cout << "Waiting for loggerwait" << std::endl;
         std::unique_lock<std::mutex> lck(mMutex);
         mNotifyLoggerThread.wait(lck);
-        std::cout << "Waiting is over : " << mNeedToClose << std::endl;
         if (mNeedToClose)
         {
             std::cout << "Shutting down the logger thread" << std::endl;

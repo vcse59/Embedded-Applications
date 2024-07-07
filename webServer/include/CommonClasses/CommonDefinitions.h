@@ -75,7 +75,9 @@ namespace COMMON_DEFINITIONS
     constexpr unsigned int  MYSQL_SERVER_PORT                       = <MYSQL_SERVER_PORT>; // 3306;
     constexpr const char    MYSQL_USERNAME[]                        = <MYSQL_USERNAME>;
     constexpr const char    MYSQL_PASSWORD[]                        = <MYSQL_PASSWORD>;
-    constexpr unsigned int  LOGGER_SERVER_CONNECTION_RETRY_SECONDS  =   1;
+    constexpr unsigned int  LOGGER_SERVER_CONNECTION_RETRY_SECONDS  = 1;
     constexpr const char    HEARTBEAT_STRING[]                      = "HB Keep Alive";
+    constexpr unsigned int  HTTP_SERVER_PROCESSING_TIMEOUT_MS       = 500;
+    constexpr unsigned int  DB_SERVER_PROCESSING_TIMEOUT_MS         = 500;
 }
 #endif

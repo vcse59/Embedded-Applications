@@ -171,21 +171,22 @@ void MySQLConnector::processDBEvents()
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        mNotifyDBThread.wait(lck);
-
-        if (mNeedToClose)
+        if (mNotifyDBThread.wait_for(lck, std::chrono::microseconds(COMMON_DEFINITIONS::DB_SERVER_PROCESSING_TIMEOUT_MS)) == std::cv_status::timeout)
         {
-            std::cout << "Shutting down the database threads";
-            break;
-        }
+            if (mNeedToClose)
+            {
+                std::cout << "Shutting down the database threads";
+                break;
+            }
 
-        if (queueInterface->getQueueLength() > 0)
-        {
-            mLastQueryTime = std::chrono::system_clock::now();
-            EVENT_MESSAGE::EventMessageInterface elem1 = queueInterface->getEvent();
-            EVENT_MESSAGE::DBMessage *message = (EVENT_MESSAGE::DBMessage *)elem1.getEventData();
+            if (queueInterface->getQueueLength() > 0)
+            {
+                mLastQueryTime = std::chrono::system_clock::now();
+                EVENT_MESSAGE::EventMessageInterface elem1 = queueInterface->getEvent();
+                EVENT_MESSAGE::DBMessage *message = (EVENT_MESSAGE::DBMessage *)elem1.getEventData();
 
-            executeQuery(message->mTableName, message->mQueryString, message->mQueryType);
+                executeQuery(message->mTableName, message->mQueryString, message->mQueryType);
+            }
         }
     }
 }
@@ -202,10 +203,10 @@ void MySQLConnector::commitDBTransaction()
         std::chrono::duration<double> diff = std::chrono::system_clock::now() - mLastQueryTime;
         if (diff.count() > 5 && mRecordCount > 0)
         {
+            std::cout << "Commit the trasaction after waiting for 5 seconds : " << mRecordCount << std::endl;
             std::unique_lock<std::mutex> lck(mMutex);
             m_DBconnection->commit();
             mLastQueryTime = std::chrono::system_clock::now();
-            mRecordCount = 0;
         }
         else
             std::this_thread::sleep_for(std::chrono::seconds(5));

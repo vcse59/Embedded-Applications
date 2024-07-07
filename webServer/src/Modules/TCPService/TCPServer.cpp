@@ -300,7 +300,7 @@ void TCPServer::handle_connection(int client_socket) {
     event.setMessage(reinterpret_cast<char *>(&message), sizeof(message));
     queueInterface->pushEvent(event);
 
-    mNotifyHTTPThread.notify_all(); // notify all waiting threads
+    mNotifyHTTPThread.notify_one(); // notify all waiting threads
 }
 
 void TCPServer::startClient()
@@ -392,29 +392,30 @@ void TCPServer::processHTTPMessage()
     while (true)
     {
         std::unique_lock<std::mutex> lck(mMutex);
-        mNotifyHTTPThread.wait(lck);
-
-        if (mNeedToClose)
+        if (mNotifyHTTPThread.wait_for(lck, std::chrono::microseconds(COMMON_DEFINITIONS::HTTP_SERVER_PROCESSING_TIMEOUT_MS)) == std::cv_status::timeout) //, [&]{return (mClientSocket == -1);}))
         {
-            std::cout << "Shutting down the web server thread";
-            break;
-        }
+            if (mNeedToClose)
+            {
+                std::cout << "Shutting down the web server thread";
+                break;
+            }
 
-        if (queueInterface->getQueueLength() > 0)
-        {
-            EVENT_MESSAGE::EventMessageInterface elem1 = queueInterface->getEvent();
-            EVENT_MESSAGE::HTTPMessage *message = (EVENT_MESSAGE::HTTPMessage *)elem1.getEventData();
+            if (queueInterface->getQueueLength() > 0)
+            {
+                EVENT_MESSAGE::EventMessageInterface elem1 = queueInterface->getEvent();
+                EVENT_MESSAGE::HTTPMessage *message = (EVENT_MESSAGE::HTTPMessage *)elem1.getEventData();
 
-            std::string receivedData;
+                std::string receivedData;
 
-            receiveMessage(message->socketId, receivedData);
+                receiveMessage(message->socketId, receivedData);
 
-            HTTP_SERVICE::HttpParams params(m_logger, receivedData);
-            std::string http_response = weakPtr.lock()->getHTTPSessionManager()->processHTTPMessage(params);
+                HTTP_SERVICE::HttpParams params(m_logger, receivedData);
+                std::string http_response = weakPtr.lock()->getHTTPSessionManager()->processHTTPMessage(params);
 
-            sendMessage(message->socketId, http_response.c_str());
+                sendMessage(message->socketId, http_response.c_str());
 
-            close(message->socketId);
+                close(message->socketId);
+            }
         }
     }
 }
