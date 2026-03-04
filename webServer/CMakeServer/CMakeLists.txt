@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(ThreadingProject)
 
 # Add a compiler flag option
@@ -40,6 +40,12 @@ endif()
 
 # Add the executable target
 add_executable(${EXECUTABLE_NAME} ${SOURCES} ../src/server_main.cpp)
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
 
 # ExternalProject_Add example (jsoncpp)
 include(ExternalProject)
